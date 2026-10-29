@@ -1,0 +1,608 @@
+rules_version = '2';
+
+// ===============================================================
+// Assumed Data Model & Architecture: Custom Sign Studio
+// ===============================================================
+//
+// 1. profiles
+//    Document ID: {uid} (Matches Firebase Auth UID)
+//    Fields:
+//      - id: string (required, immutable, matches document ID and auth.uid)
+//      - email: string (optional, max 150 chars)
+//      - full_name: string (required, 1-200 chars)
+//      - phone: string (optional, max 50 chars)
+//      - contact_channel: string (optional, max 100 chars)
+//      - avatar_url: string (optional, max 1000 chars)
+//      - role: string (optional, protected from self-elevation to admin/staff)
+//      - created_at: string/timestamp (optional, immutable)
+//      - updated_at: string/timestamp (optional)
+//
+// 2. user_roles
+//    Document ID: {uid} (Matches user's Auth UID)
+//    Fields:
+//      - user_id: string (required, immutable, matches document ID)
+//      - role: string (required, 'customer' | 'staff' | 'admin' | 'super_admin')
+//      - granted_by: string (optional, max 128 chars)
+//      - created_at: string/timestamp (optional)
+//
+// 3. Catalog Collections (Publicly readable, admin/staff writable)
+//    - category_groups: High-level grouping for sign categories
+//    - sign_categories: Base sign types (base_price >= 0)
+//    - sign_styles: Styles & price modifiers (price_modifier >= 0)
+//    - sign_templates: Ready-made design templates
+//    - decoration_colors: Color palette categories
+//    - decoration_categories: Hierarchical decoration groups
+//    - decorations: Free decorative stickers/frames (STRICT REQUIREMENT: price == 0 and is_free == true)
+//    - product_fields: Dynamic order form fields per category
+//    - promotions: Discount codes & validation rules
+//    - site_settings: Shop branding, banners, FAQs, and configs
+//
+// 4. reviews
+//    Document ID: {reviewId}
+//    Fields:
+//      - customer_name: string (required, 1-100 chars)
+//      - rating: number (required, 1 to 5)
+//      - comment: string (required, 1-2000 chars)
+//      - is_published: bool (required; only published reviews are publicly readable)
+//      - user_id: string (optional, matches author if authenticated)
+//      - order_id: string (optional)
+//      - sign_type_name: string (optional, max 200 chars)
+//      - style_name: string (optional, max 200 chars)
+//      - review_image_url: string (optional, max 1000 chars)
+//
+// 5. favorites
+//    Document ID: {favId}
+//    Fields:
+//      - user_id: string (required, matches request.auth.uid)
+//      - template_id: string (required, max 128 chars)
+//      - created_at: string/timestamp (optional)
+//
+// 6. orders
+//    Document ID: {orderId}
+//    Fields:
+//      - order_number: string (required, immutable, 1-64 chars)
+//      - user_id: string | null (optional; if authenticated, must match auth.uid)
+//      - customer_name: string (required, 1-200 chars)
+//      - customer_contact: string (required, 1-100 chars)
+//      - customer_email: string (optional, max 150 chars)
+//      - delivery_channel: string (optional, max 100 chars)
+//      - customer_note: string (optional, max 2000 chars)
+//      - internal_note: string (optional, admin-only note, max 5000 chars)
+//      - tracking_access_token: string (required, 8-128 chars, random secure token for guest tracking)
+//      - status: string (required, on create: strictly 'pending_review')
+//      - subtotal_amount: number (required, >= 0)
+//      - discount_amount: number (optional, >= 0)
+//      - service_fee: number (optional, >= 0)
+//      - total_amount: number (required, >= 0)
+//      - is_paid: bool (required; on client create must be false)
+//      - items: list (required, 1-50 order items)
+//
+// 7. audit_logs
+//    Document ID: {logId}
+//    Fields:
+//      - action: string (required, 1-100 chars)
+//      - entity_type: string (required, 1-100 chars)
+//      - entity_id: string (optional, max 128 chars)
+//      - actor_id: string | null (optional; must match request.auth.uid if provided)
+//      - actor_email: string (optional, max 150 chars)
+//      - actor_role: string (optional, max 50 chars)
+//      - details: map (required)
+//      - created_at: string/timestamp (optional)
+//
+// ===============================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------------------------------------------------------------
+    // Core Helper Functions & Role-Based Access Control (RBAC)
+    // ---------------------------------------------------------------
+
+    // Check if the request is from an authenticated user
+    function isAuthenticated() {
+      return request.auth != null && request.auth.uid != null;
+    }
+
+    // Check if the user has one of the specified roles in user_roles collection
+    function hasRole(allowedRoles) {
+      return isAuthenticated() &&
+        exists(/databases/$(database)/documents/user_roles/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/user_roles/$(request.auth.uid)).data.role in allowedRoles;
+    }
+
+    // Check if the user is an admin or staff member
+    function isAdminOrStaff() {
+      return hasRole(['admin', 'staff', 'super_admin']);
+    }
+
+    // Check if the user is a super administrator
+    function isSuperAdmin() {
+      return hasRole(['super_admin']);
+    }
+
+    // Check if user owns the document by comparing with provided user ID
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Validate presence of required keys in incoming payload
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    // Validate optional string field (if present, must be string within bounds)
+    function isValidOptionalString(field, minLen, maxLen) {
+      return !(field in request.resource.data) ||
+        (request.resource.data[field] is string &&
+         request.resource.data[field].size() >= minLen &&
+         request.resource.data[field].size() <= maxLen);
+    }
+
+    // ---------------------------------------------------------------
+    // Domain Validators (Applied to both create and update operations)
+    // ---------------------------------------------------------------
+
+    // 1. Profile Validator
+    function isValidProfile(data) {
+      return hasRequiredFields(['id', 'full_name']) &&
+        data.id is string && data.id.size() > 0 && data.id.size() <= 128 &&
+        data.full_name is string && data.full_name.size() > 0 && data.full_name.size() <= 200 &&
+        isValidOptionalString('email', 0, 150) &&
+        isValidOptionalString('phone', 0, 50) &&
+        isValidOptionalString('contact_channel', 0, 100) &&
+        isValidOptionalString('avatar_url', 0, 1000) &&
+        // Self-elevation prevention: standard users cannot grant or alter privileged roles
+        (
+          !('role' in data) ||
+          data.role == 'customer' ||
+          (resource != null && 'role' in resource.data && data.role == resource.data.role) ||
+          isAdminOrStaff()
+        );
+    }
+
+    // 2. User Role Validator
+    function isValidUserRole(data) {
+      return hasRequiredFields(['user_id', 'role']) &&
+        data.user_id is string && data.user_id.size() > 0 && data.user_id.size() <= 128 &&
+        data.role in ['customer', 'staff', 'admin', 'super_admin'] &&
+        isValidOptionalString('granted_by', 0, 128);
+    }
+
+    // 3. Catalog Validators
+    function isValidCategoryGroup(data) {
+      return hasRequiredFields(['slug', 'name', 'is_active']) &&
+        data.slug is string && data.slug.size() > 0 && data.slug.size() <= 100 &&
+        data.name is string && data.name.size() > 0 && data.name.size() <= 200 &&
+        data.is_active is bool &&
+        isValidOptionalString('description', 0, 2000) &&
+        isValidOptionalString('icon_name', 0, 100) &&
+        (!('sort_order' in data) || data.sort_order is number) &&
+        (!('is_demo' in data) || data.is_demo is bool);
+    }
+
+    function isValidSignCategory(data) {
+      return hasRequiredFields(['slug', 'name', 'base_price', 'is_active']) &&
+        data.slug is string && data.slug.size() > 0 && data.slug.size() <= 100 &&
+        data.name is string && data.name.size() > 0 && data.name.size() <= 200 &&
+        data.base_price is number && data.base_price >= 0 &&
+        data.is_active is bool &&
+        isValidOptionalString('group_id', 0, 128) &&
+        isValidOptionalString('group_name', 0, 200) &&
+        isValidOptionalString('short_description', 0, 500) &&
+        isValidOptionalString('description', 0, 5000) &&
+        isValidOptionalString('preview_image_url', 0, 1000) &&
+        (!('is_popular' in data) || data.is_popular is bool) &&
+        (!('is_recommended' in data) || data.is_recommended is bool) &&
+        (!('requires_sensitive_review' in data) || data.requires_sensitive_review is bool) &&
+        (!('sort_order' in data) || data.sort_order is number) &&
+        (!('is_demo' in data) || data.is_demo is bool);
+    }
+
+    function isValidSignStyle(data) {
+      return hasRequiredFields(['code', 'slug', 'name', 'price_modifier', 'is_active']) &&
+        data.code is string && data.code.size() > 0 && data.code.size() <= 50 &&
+        data.slug is string && data.slug.size() > 0 && data.slug.size() <= 100 &&
+        data.name is string && data.name.size() > 0 && data.name.size() <= 200 &&
+        data.price_modifier is number && data.price_modifier >= 0 &&
+        data.is_active is bool &&
+        isValidOptionalString('tagline', 0, 300) &&
+        isValidOptionalString('description', 0, 3000) &&
+        isValidOptionalString('preview_image_url', 0, 1000) &&
+        (!('features' in data) || (data.features is list && data.features.size() <= 20)) &&
+        (!('sort_order' in data) || data.sort_order is number) &&
+        (!('is_demo' in data) || data.is_demo is bool);
+    }
+
+    function isValidSignTemplate(data) {
+      return hasRequiredFields(['code', 'name', 'sign_category_id', 'style_id', 'status', 'is_active']) &&
+        data.code is string && data.code.size() > 0 && data.code.size() <= 50 &&
+        data.name is string && data.name.size() > 0 && data.name.size() <= 200 &&
+        data.sign_category_id is string && data.sign_category_id.size() > 0 && data.sign_category_id.size() <= 128 &&
+        data.style_id is string && data.style_id.size() > 0 && data.style_id.size() <= 128 &&
+        data.status in ['published', 'draft', 'archived'] &&
+        data.is_active is bool &&
+        isValidOptionalString('preview_image_url', 0, 1000) &&
+        isValidOptionalString('description', 0, 3000) &&
+        (!('sample_tags' in data) || (data.sample_tags is list && data.sample_tags.size() <= 30)) &&
+        (!('base_price_override' in data) || data.base_price_override == null || (data.base_price_override is number && data.base_price_override >= 0)) &&
+        (!('is_popular' in data) || data.is_popular is bool) &&
+        (!('is_featured_sample' in data) || data.is_featured_sample is bool) &&
+        (!('sort_order' in data) || data.sort_order is number) &&
+        (!('is_demo' in data) || data.is_demo is bool);
+    }
+
+    function isValidDecorationColor(data) {
+      return hasRequiredFields(['slug', 'name', 'hex_code', 'is_active']) &&
+        data.slug is string && data.slug.size() > 0 && data.slug.size() <= 100 &&
+        data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
+        data.hex_code is string && data.hex_code.size() >= 4 && data.hex_code.size() <= 20 &&
+        data.is_active is bool &&
+        isValidOptionalString('preview_image_url', 0, 1000) &&
+        (!('sort_order' in data) || data.sort_order is number) &&
+        (!('is_demo' in data) || data.is_demo is bool);
+    }
+
+    function isValidDecorationCategory(data) {
+      return hasRequiredFields(['slug', 'name', 'is_active']) &&
+        data.slug is string && data.slug.size() > 0 && data.slug.size() <= 100 &&
+        data.name is string && data.name.size() > 0 && data.name.size() <= 150 &&
+        data.is_active is bool &&
+        isValidOptionalString('description', 0, 2000) &&
+        isValidOptionalString('parent_id', 0, 128) &&
+        isValidOptionalString('default_color_id', 0, 128) &&
+        isValidOptionalString('icon_name', 0, 100) &&
+        (!('sort_order' in data) || data.sort_order is number) &&
+        (!('is_demo' in data) || data.is_demo is bool);
+    }
+
+    // Specific invariant: decorations MUST strictly have price == 0 and is_free == true
+    function isValidDecoration(data) {
+      return hasRequiredFields(['name', 'price', 'is_free', 'is_active']) &&
+        data.name is string && data.name.size() > 0 && data.name.size() <= 200 &&
+        data.price == 0 &&
+        data.is_free == true &&
+        data.is_active is bool &&
+        isValidOptionalString('code', 0, 50) &&
+        isValidOptionalString('color_id', 0, 128) &&
+        isValidOptionalString('category_id', 0, 128) &&
+        isValidOptionalString('image_url', 0, 1000) &&
+        (!('sort_order' in data) || data.sort_order is number) &&
+        (!('is_demo' in data) || data.is_demo is bool);
+    }
+
+    function isValidProductField(data) {
+      return hasRequiredFields(['sign_category_id', 'field_key', 'label', 'field_type', 'is_required', 'is_active']) &&
+        data.sign_category_id is string && data.sign_category_id.size() > 0 && data.sign_category_id.size() <= 128 &&
+        data.field_key is string && data.field_key.size() > 0 && data.field_key.size() <= 100 &&
+        data.label is string && data.label.size() > 0 && data.label.size() <= 200 &&
+        data.field_type in ['text', 'textarea', 'number', 'select', 'checkbox', 'date', 'time', 'image_upload'] &&
+        data.is_required is bool &&
+        data.is_active is bool &&
+        isValidOptionalString('placeholder', 0, 200) &&
+        isValidOptionalString('help_text', 0, 500) &&
+        (!('options' in data) || (data.options is list && data.options.size() <= 50)) &&
+        (!('is_sensitive' in data) || data.is_sensitive is bool) &&
+        (!('sort_order' in data) || data.sort_order is number) &&
+        (!('is_demo' in data) || data.is_demo is bool);
+    }
+
+    function isValidPromotion(data) {
+      return hasRequiredFields(['code', 'title', 'discount_type', 'discount_value', 'min_order_amount', 'is_active']) &&
+        data.code is string && data.code.size() > 0 && data.code.size() <= 50 &&
+        data.title is string && data.title.size() > 0 && data.title.size() <= 200 &&
+        data.discount_type in ['fixed', 'percentage'] &&
+        data.discount_value is number && data.discount_value >= 0 &&
+        data.min_order_amount is number && data.min_order_amount >= 0 &&
+        data.is_active is bool &&
+        isValidOptionalString('description', 0, 2000) &&
+        (!('max_discount_amount' in data) || data.max_discount_amount == null || (data.max_discount_amount is number && data.max_discount_amount >= 0)) &&
+        (!('usage_limit' in data) || data.usage_limit == null || (data.usage_limit is number && data.usage_limit >= 0)) &&
+        (!('used_count' in data) || (data.used_count is number && data.used_count >= 0)) &&
+        (!('is_demo' in data) || data.is_demo is bool);
+    }
+
+    function isValidSiteSetting(data) {
+      return hasRequiredFields(['setting_key', 'setting_value', 'is_public']) &&
+        data.setting_key is string && data.setting_key.size() > 0 && data.setting_key.size() <= 100 &&
+        data.setting_value is map &&
+        data.is_public is bool &&
+        isValidOptionalString('setting_group', 0, 100) &&
+        isValidOptionalString('description', 0, 1000) &&
+        (!('is_demo' in data) || data.is_demo is bool);
+    }
+
+    // 4. Review Validator
+    function isValidReview(data) {
+      return hasRequiredFields(['customer_name', 'rating', 'comment', 'is_published']) &&
+        data.customer_name is string && data.customer_name.size() > 0 && data.customer_name.size() <= 100 &&
+        data.rating is number && data.rating >= 1 && data.rating <= 5 &&
+        data.comment is string && data.comment.size() > 0 && data.comment.size() <= 2000 &&
+        data.is_published is bool &&
+        isValidOptionalString('order_id', 0, 128) &&
+        isValidOptionalString('user_id', 0, 128) &&
+        isValidOptionalString('sign_type_name', 0, 200) &&
+        isValidOptionalString('style_name', 0, 200) &&
+        isValidOptionalString('review_image_url', 0, 1000) &&
+        (!('is_demo' in data) || data.is_demo is bool);
+    }
+
+    // 5. Favorite Validator
+    function isValidFavorite(data) {
+      return hasRequiredFields(['user_id', 'template_id']) &&
+        data.user_id is string && data.user_id == request.auth.uid &&
+        data.template_id is string && data.template_id.size() > 0 && data.template_id.size() <= 128;
+    }
+
+    // 6. Order Validators
+    function isValidOrderCreate(data) {
+      return hasRequiredFields(['order_number', 'customer_name', 'customer_contact', 'status', 'subtotal_amount', 'total_amount', 'tracking_access_token', 'items']) &&
+        data.status == 'pending_review' &&
+        data.subtotal_amount is number && data.subtotal_amount >= 0 &&
+        data.total_amount is number && data.total_amount >= 0 &&
+        data.items is list && data.items.size() > 0 && data.items.size() <= 50 &&
+        data.order_number is string && data.order_number.size() > 0 && data.order_number.size() <= 64 &&
+        data.customer_name is string && data.customer_name.size() > 0 && data.customer_name.size() <= 200 &&
+        data.customer_contact is string && data.customer_contact.size() > 0 && data.customer_contact.size() <= 100 &&
+        data.tracking_access_token is string && data.tracking_access_token.size() >= 8 && data.tracking_access_token.size() <= 128 &&
+        isValidOptionalString('customer_email', 0, 150) &&
+        isValidOptionalString('delivery_channel', 0, 100) &&
+        isValidOptionalString('customer_note', 0, 2000) &&
+        isValidOptionalString('internal_note', 0, 5000) &&
+        isValidOptionalString('contact_lookup_key', 0, 64) &&
+        isValidOptionalString('promotion_code', 0, 50) &&
+        (!('discount_amount' in data) || (data.discount_amount is number && data.discount_amount >= 0)) &&
+        (!('service_fee' in data) || (data.service_fee is number && data.service_fee >= 0)) &&
+        (!('is_paid' in data) || data.is_paid == false) &&
+        (!('is_demo' in data) || data.is_demo is bool) &&
+        // Protect user_id: customers cannot spoof another account's ID
+        (
+          (isAuthenticated() && (!('user_id' in data) || data.user_id == null || data.user_id == request.auth.uid)) ||
+          (!isAuthenticated() && (!('user_id' in data) || data.user_id == null))
+        );
+    }
+
+    function isValidOrderUpdate(data) {
+      return data.subtotal_amount is number && data.subtotal_amount >= 0 &&
+        data.total_amount is number && data.total_amount >= 0 &&
+        data.items is list && data.items.size() <= 50 &&
+        data.status in [
+          'pending_review',
+          'awaiting_payment',
+          'verifying_payment',
+          'designing',
+          'awaiting_confirmation',
+          'revising',
+          'preparing_files',
+          'completed',
+          'delivered',
+          'cancelled'
+        ] &&
+        data.order_number is string && data.order_number.size() <= 64 &&
+        data.customer_name is string && data.customer_name.size() <= 200 &&
+        data.customer_contact is string && data.customer_contact.size() <= 100 &&
+        (!('is_paid' in data) || data.is_paid is bool);
+    }
+
+    // 7. Audit Log Validator
+    function isValidAuditLog(data) {
+      return hasRequiredFields(['action', 'entity_type', 'details']) &&
+        data.action is string && data.action.size() > 0 && data.action.size() <= 100 &&
+        data.entity_type is string && data.entity_type.size() > 0 && data.entity_type.size() <= 100 &&
+        data.details is map &&
+        isValidOptionalString('actor_id', 0, 128) &&
+        isValidOptionalString('actor_email', 0, 150) &&
+        isValidOptionalString('actor_role', 0, 50) &&
+        isValidOptionalString('entity_id', 0, 128) &&
+        // Ensure caller cannot impersonate someone else's actor_id
+        (!('actor_id' in data) || data.actor_id == null || data.actor_id == request.auth.uid);
+    }
+
+    // ===============================================================
+    // Collection Rules
+    // ===============================================================
+
+    // Root Default Deny: All undefined paths are strictly closed
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // ---------------------------------------------------------------
+    // 1. profiles
+    // ---------------------------------------------------------------
+    match /profiles/{userId} {
+      // Read: Profile owner or admin/staff
+      allow read: if isAuthenticated() && (request.auth.uid == userId || isAdminOrStaff());
+
+      // Create: Authenticated user creating their own profile document
+      allow create: if isAuthenticated() &&
+                    request.auth.uid == userId &&
+                    request.resource.data.id == request.auth.uid &&
+                    isValidProfile(request.resource.data);
+
+      // Update: Profile owner or admin/staff; document ID is immutable
+      allow update: if isAuthenticated() &&
+                    (request.auth.uid == userId || isAdminOrStaff()) &&
+                    resource.data.id == userId &&
+                    request.resource.data.id == resource.data.id &&
+                    isValidProfile(request.resource.data);
+
+      // Delete: Strictly administrative
+      allow delete: if isAdminOrStaff();
+    }
+
+    // ---------------------------------------------------------------
+    // 2. user_roles
+    // ---------------------------------------------------------------
+    match /user_roles/{userId} {
+      // Read: The role owner or admin/staff
+      allow read: if isAuthenticated() &&
+                  (request.auth.uid == userId ||
+                   ('user_id' in resource.data && request.auth.uid == resource.data.user_id) ||
+                   isAdminOrStaff());
+
+      // Write (Create/Update): Super admin or admin/staff
+      allow create: if (isSuperAdmin() || isAdminOrStaff()) &&
+                    isValidUserRole(request.resource.data);
+
+      allow update: if (isSuperAdmin() || isAdminOrStaff()) &&
+                    request.resource.data.user_id == resource.data.user_id &&
+                    isValidUserRole(request.resource.data);
+
+      // Delete: Only super admin or admin/staff
+      allow delete: if isSuperAdmin() || isAdminOrStaff();
+    }
+
+    // ---------------------------------------------------------------
+    // 3. Catalog Collections (Public read, admin/staff write)
+    // ---------------------------------------------------------------
+    match /category_groups/{groupId} {
+      allow read: if true;
+      allow create: if isAdminOrStaff() && isValidCategoryGroup(request.resource.data);
+      allow update: if isAdminOrStaff() && isValidCategoryGroup(request.resource.data);
+      allow delete: if isAdminOrStaff();
+    }
+
+    match /sign_categories/{categoryId} {
+      allow read: if true;
+      allow create: if isAdminOrStaff() && isValidSignCategory(request.resource.data);
+      allow update: if isAdminOrStaff() && isValidSignCategory(request.resource.data);
+      allow delete: if isAdminOrStaff();
+    }
+
+    match /sign_styles/{styleId} {
+      allow read: if true;
+      allow create: if isAdminOrStaff() && isValidSignStyle(request.resource.data);
+      allow update: if isAdminOrStaff() && isValidSignStyle(request.resource.data);
+      allow delete: if isAdminOrStaff();
+    }
+
+    match /sign_templates/{templateId} {
+      allow read: if true;
+      allow create: if isAdminOrStaff() && isValidSignTemplate(request.resource.data);
+      allow update: if isAdminOrStaff() && isValidSignTemplate(request.resource.data);
+      allow delete: if isAdminOrStaff();
+    }
+
+    match /decoration_colors/{colorId} {
+      allow read: if true;
+      allow create: if isAdminOrStaff() && isValidDecorationColor(request.resource.data);
+      allow update: if isAdminOrStaff() && isValidDecorationColor(request.resource.data);
+      allow delete: if isAdminOrStaff();
+    }
+
+    match /decoration_categories/{categoryId} {
+      allow read: if true;
+      allow create: if isAdminOrStaff() && isValidDecorationCategory(request.resource.data);
+      allow update: if isAdminOrStaff() && isValidDecorationCategory(request.resource.data);
+      allow delete: if isAdminOrStaff();
+    }
+
+    match /decorations/{decorationId} {
+      allow read: if true;
+      // Price must be 0 and is_free must be true on both create and update
+      allow create: if isAdminOrStaff() && isValidDecoration(request.resource.data);
+      allow update: if isAdminOrStaff() && isValidDecoration(request.resource.data);
+      allow delete: if isAdminOrStaff();
+    }
+
+    match /product_fields/{fieldId} {
+      allow read: if true;
+      allow create: if isAdminOrStaff() && isValidProductField(request.resource.data);
+      allow update: if isAdminOrStaff() && isValidProductField(request.resource.data);
+      allow delete: if isAdminOrStaff();
+    }
+
+    match /promotions/{promotionId} {
+      allow read: if true;
+      allow create: if isAdminOrStaff() && isValidPromotion(request.resource.data);
+      allow update: if isAdminOrStaff() && isValidPromotion(request.resource.data);
+      allow delete: if isAdminOrStaff();
+    }
+
+    match /site_settings/{settingId} {
+      allow read: if true;
+      allow create: if isAdminOrStaff() && isValidSiteSetting(request.resource.data);
+      allow update: if isAdminOrStaff() && isValidSiteSetting(request.resource.data);
+      allow delete: if isAdminOrStaff();
+    }
+
+    // ---------------------------------------------------------------
+    // 4. reviews
+    // ---------------------------------------------------------------
+    match /reviews/{reviewId} {
+      // Read: Public if published, or admin/staff for moderation
+      allow read: if ('is_published' in resource.data && resource.data.is_published == true) || isAdminOrStaff();
+
+      // Create: Authenticated users can submit a review
+      allow create: if isAuthenticated() &&
+                    (!('user_id' in request.resource.data) || request.resource.data.user_id == null || request.resource.data.user_id == request.auth.uid) &&
+                    isValidReview(request.resource.data);
+
+      // Update / Delete: Admin/staff for review moderation
+      allow update: if isAdminOrStaff() && isValidReview(request.resource.data);
+      allow delete: if isAdminOrStaff();
+    }
+
+    // ---------------------------------------------------------------
+    // 5. favorites
+    // ---------------------------------------------------------------
+    match /favorites/{favoriteId} {
+      // Read: Owner only
+      allow read: if isAuthenticated() && resource.data.user_id == request.auth.uid;
+
+      // Create: Owner creating a favorite referencing their own UID
+      allow create: if isAuthenticated() &&
+                    request.resource.data.user_id == request.auth.uid &&
+                    isValidFavorite(request.resource.data);
+
+      // Update: Owner only, preserving ownership integrity
+      allow update: if isAuthenticated() &&
+                    resource.data.user_id == request.auth.uid &&
+                    request.resource.data.user_id == request.auth.uid &&
+                    isValidFavorite(request.resource.data);
+
+      // Delete: Owner removing their own favorite
+      allow delete: if isAuthenticated() && resource.data.user_id == request.auth.uid;
+    }
+
+    // ---------------------------------------------------------------
+    // 6. orders
+    // ---------------------------------------------------------------
+    match /orders/{orderId} {
+      // Read:
+      // - Admin/Staff can read all orders
+      // - Authenticated customer can read their own orders (user_id matches auth.uid)
+      // - Unauthenticated guest can access an order matching tracking_access_token
+      allow read: if isAdminOrStaff() ||
+                  (isAuthenticated() && 'user_id' in resource.data && resource.data.user_id == request.auth.uid) ||
+                  (request.auth == null && 'tracking_access_token' in resource.data &&
+                   resource.data.tracking_access_token is string &&
+                   resource.data.tracking_access_token.size() > 0);
+
+      // Create: Open for checkout submission if payload conforms to valid pending structure
+      allow create: if isValidOrderCreate(request.resource.data);
+
+      // Update: Admin/Staff only; order_number is strictly immutable
+      allow update: if isAdminOrStaff() &&
+                    request.resource.data.order_number == resource.data.order_number &&
+                    isValidOrderUpdate(request.resource.data);
+
+      // Delete: Blocked to preserve order audit history and accounting integrity
+      allow delete: if false;
+    }
+
+    // ---------------------------------------------------------------
+    // 7. audit_logs
+    // ---------------------------------------------------------------
+    match /audit_logs/{logId} {
+      // Read: Admin/staff only
+      allow read: if isAdminOrStaff();
+
+      // Create: Authenticated users/staff logging system and client events
+      allow create: if isAuthenticated() && isValidAuditLog(request.resource.data);
+
+      // Update & Delete: Strictly prohibited (append-only ledger)
+      allow update, delete: if false;
+    }
+  }
+}

@@ -49,7 +49,46 @@
 
 ---
 
-## ขั้นตอนการเชื่อมต่อ Supabase และนำขึ้นใช้งานจริง (Production Setup)
+## การตั้งค่าใช้งานจริงด้วย Firebase & Render (Production Setup)
+
+โปรเจกต์นี้ได้รับการปรับปรุงให้รองรับ **Google Firebase** (Firestore + Firebase Storage + Firebase Auth) อย่างสมบูรณ์:
+
+### ขั้นตอนที่ 1: สร้างโปรเจกต์บน Firebase Console
+1. ไปที่ [Firebase Console](https://console.firebase.google.com/) แล้วกด **Add project** (ตั้งชื่อ เช่น `custom-sign-store`)
+2. เปิดใช้งานบริการ 3 ตัว:
+   - **Authentication**: เมนู Build > Authentication > Get started > Sign-in method > เลือกเปิดใช้งาน **Email/Password**
+   - **Cloud Firestore**: เมนู Build > Firestore Database > Create database > เลือก Location (เช่น `asia-southeast1`) และเลือก Start in production mode (หรือ test mode)
+   - **Storage**: เมนู Build > Storage > Get started
+3. นำค่า Web App Config:
+   - ไปที่ **Project Settings** (ไอคอนฟันเฟือง) > แท็บ General
+   - เลื่อนลงมาที่หัวข้อ **Your apps** > กดไอคอนเว็บ `</>` เพื่อลงทะเบียน Web App
+   - คัดลอกค่า Config ทั้ง 6 ตัว:
+     - `apiKey`
+     - `authDomain`
+     - `projectId`
+     - `storageBucket`
+     - `messagingSenderId`
+     - `appId`
+
+### ขั้นตอนที่ 2: ตั้งค่าไฟล์ `.env.local`
+สร้างหรือคัดลอกไฟล์ `.env.example` เป็น `.env.local`:
+
+```env
+VITE_FIREBASE_API_KEY=YOUR-FIREBASE-API-KEY
+VITE_FIREBASE_AUTH_DOMAIN=YOUR-PROJECT-ID.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=YOUR-PROJECT-ID
+VITE_FIREBASE_STORAGE_BUCKET=YOUR-PROJECT-ID.firebasestorage.app
+VITE_FIREBASE_MESSAGING_SENDER_ID=YOUR-MESSAGING-SENDER-ID
+VITE_FIREBASE_APP_ID=YOUR-FIREBASE-APP-ID
+```
+
+### ขั้นตอนที่ 3: ระบบสร้างข้อมูลและสิทธิ์ Admin อัตโนมัติ (Auto-Seeding & First Super Admin)
+- **Auto-Seeding**: เมื่อคุณเปิดใช้งานเว็บครั้งแรก ระบบจะตรวจพบ Firestore ว่าง และทำการนำเข้าข้อมูลประเภทป้าย 15 รายการ, 2 สไตล์, 20 เทมเพลต และของตกแต่งฟรี 30 ชิ้นให้โดยอัตโนมัติ
+- **First Admin**: ผู้ใช้งานที่ลงทะเบียนผ่านหน้า `/register` คนแรกสุดของระบบ จะได้รับสิทธิ์ **`super_admin`** โดยอัตโนมัติทันที
+
+---
+
+## ขั้นตอนการเชื่อมต่อ Supabase (ทางเลือกเดิม)
 
 ### ขั้นตอนที่ 1: สร้างโปรเจกต์บน Supabase
 1. ไปที่ [https://supabase.com/dashboard](https://supabase.com/dashboard) และสร้างโปรเจกต์ใหม่ชื่อ `custom-sign-studio`

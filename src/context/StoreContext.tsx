@@ -1,5 +1,25 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { isSupabaseConfigured, supabase } from '@/lib/supabase';
+import { isFirebaseConfigured, auth, db } from '@/lib/firebase';
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut as firebaseSignOut,
+  onAuthStateChanged,
+} from 'firebase/auth';
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  setDoc,
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
+  orderBy,
+  limit,
+  writeBatch,
+} from 'firebase/firestore';
 import {
   AuditLogRecord,
   CategoryGroup,
@@ -43,7 +63,13 @@ import {
 } from '@/data/demoSeedData';
 import { calculateOrderPricing } from '@/utils/pricing';
 
-export type DatabaseConnectionMode = 'supabase_connected' | 'supabase_error' | 'awaiting_supabase_config';
+export type DatabaseConnectionMode =
+  | 'firebase_connected'
+  | 'firebase_error'
+  | 'awaiting_firebase_config'
+  | 'supabase_connected'
+  | 'supabase_error'
+  | 'awaiting_supabase_config';
 
 export interface SubmitOrderInput {
   idempotency_key: string;
@@ -148,6 +174,7 @@ interface StoreContextValue {
 
   clearDemoRecords: () => Promise<void>;
   restoreDemoRecords: () => Promise<void>;
+  seedFirebaseDatabase?: () => Promise<void>;
 }
 
 const StoreContext = createContext<StoreContextValue | undefined>(undefined);
@@ -155,7 +182,6 @@ const StoreContext = createContext<StoreContextValue | undefined>(undefined);
 const STORAGE_ORDERS_KEY = 'custom_sign_studio_orders_v2';
 const STORAGE_USER_KEY = 'custom_sign_studio_user_v2';
 
-// Seed copy of customer's active order to ensure it immediately appears across reloads/sessions
 const INITIAL_RESCUED_ORDER: OrderRecord = {
   id: 'ord-rescued-gbns3',
   order_number: 'CSS-20261027-GBNS3',
@@ -243,7 +269,6 @@ function loadInitialOrders(): OrderRecord[] {
   if (list.length === 0) {
     list = [INITIAL_RESCUED_ORDER, ...DEMO_ORDERS];
   } else {
-    // Ensure INITIAL_RESCUED_ORDER is present if not already in list
     if (!list.some((o) => o.order_number === 'CSS-20261027-GBNS3')) {
       list = [INITIAL_RESCUED_ORDER, ...list];
     }
@@ -265,16 +290,15 @@ function loadInitialUser(): Profile | null {
 
 export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [connectionMode, setConnectionMode] = useState<DatabaseConnectionMode>(
-    isSupabaseConfigured ? 'supabase_connected' : 'awaiting_supabase_config'
+    isFirebaseConfigured ? 'firebase_connected' : 'awaiting_firebase_config'
   );
   const [connectionMessage, setConnectionMessage] = useState<string>(
-    isSupabaseConfigured
-      ? 'กำลังเชื่อมต่อฐานข้อมูล Supabase PostgreSQL...'
-      : 'ยังไม่ได้ตั้งค่า VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY ในไฟล์ .env.local — ขณะนี้แสดงข้อมูลเริ่มต้น (Placeholder & Demo) เพื่อให้ทดสอบระบบได้ครบทุกฟีเจอร์'
+    isFirebaseConfigured
+      ? 'กำลังเชื่อมต่อฐานข้อมูล Google Firebase Firestore...'
+      : 'ยังไม่ได้ตั้งค่า VITE_FIREBASE_* ในไฟล์ .env.local — ขณะนี้แสดงข้อมูลเริ่มต้น (Placeholder & Demo) เพื่อให้ทดสอบระบบได้ครบทุกฟีเจอร์'
   );
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  // Core state initialized with full Demo Data + LocalStorage persistence
   const [currentUser, setCurrentUser] = useState<Profile | null>(loadInitialUser);
   const [categoryGroups, setCategoryGroups] = useState<CategoryGroup[]>(DEMO_CATEGORY_GROUPS);
   const [signCategories, setSignCategories] = useState<SignCategory[]>(DEMO_SIGN_CATEGORIES);
@@ -286,21 +310,22 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [productFields, setProductFields] = useState<ProductField[]>(DEMO_PRODUCT_FIELDS);
   const [promotions, setPromotions] = useState<Promotion[]>(DEMO_PROMOTIONS);
   const [reviews, setReviews] = useState<ReviewRecord[]>(DEMO_REVIEWS);
-  // Supabase order data includes customer PII and tracking tokens; never hydrate it from local storage.
   const [orders, setOrders] = useState<OrderRecord[]>(() =>
-    isSupabaseConfigured ? [] : loadInitialOrders()
+    isFirebaseConfigured ? [] : loadInitialOrders()
   );
-  const [favorites, setFavorites] = useState<string[]>(['40000000-0000-0000-0000-000000000001', '40000000-0000-0000-0000-000000000011']);
+  const [favorites, setFavorites] = useState<string[]>([
+    '40000000-0000-0000-0000-000000000001',
+    '40000000-0000-0000-0000-000000000011',
+  ]);
   const [siteSettings, setSiteSettings] = useState<SiteSettingsBundle>(DEMO_SITE_SETTINGS);
   const [profiles, setProfiles] = useState<Profile[]>(DEMO_PROFILES);
   const [userRoles, setUserRoles] = useState<UserRoleRecord[]>(DEMO_USER_ROLES);
   const [auditLogs, setAuditLogs] = useState<AuditLogRecord[]>(DEMO_AUDIT_LOGS);
   const [processedIdempotencyKeys, setProcessedIdempotencyKeys] = useState<Record<string, OrderRecord>>({});
 
-  // Persist orders and current user to LocalStorage for cross-tab and reload continuity
   useEffect(() => {
     try {
-      if (isSupabaseConfigured || connectionMode === 'supabase_connected') {
+      if (isFirebaseConfigured || connectionMode === 'firebase_connected') {
         localStorage.removeItem(STORAGE_ORDERS_KEY);
       } else {
         localStorage.setItem(STORAGE_ORDERS_KEY, JSON.stringify(orders));
@@ -322,7 +347,6 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   }, [currentUser]);
 
-  // Real-time cross-tab synchronization for orders
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === STORAGE_ORDERS_KEY && e.newValue) {
@@ -340,7 +364,6 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
-  // Apply dynamic theme colors from siteSettings.branding.theme_colors to :root CSS variables
   useEffect(() => {
     const colors = siteSettings.branding?.theme_colors;
     if (!colors || typeof document === 'undefined') return;
@@ -374,181 +397,278 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       };
       setAuditLogs((prev) => [entry, ...prev]);
 
-      if (supabase && currentUser) {
-        await supabase.from('audit_logs').insert({
-          actor_id: currentUser.id,
-          actor_email: currentUser.email,
-          actor_role: currentUser.role ?? 'admin',
-          action,
-          entity_type: entityType,
-          entity_id: entityId,
-          details,
-        });
+      if (db && isFirebaseConfigured && currentUser) {
+        try {
+          await setDoc(doc(db, 'audit_logs', entry.id), entry);
+        } catch (e) {
+          console.error('Audit log write error:', e);
+        }
       }
     },
     [currentUser]
   );
 
-  // Fetch live data from Supabase when configured
+  // Helper: Seed demo catalog into Firestore
+  const seedFirebaseDatabase = useCallback(async () => {
+    if (!db) return;
+    const firestore = db;
+    setIsLoading(true);
+    try {
+      // Batch 1: groups, categories, styles
+      const b1 = writeBatch(firestore);
+      DEMO_CATEGORY_GROUPS.forEach((g) => b1.set(doc(firestore, 'category_groups', g.id), g));
+      DEMO_SIGN_CATEGORIES.forEach((c) => b1.set(doc(firestore, 'sign_categories', c.id), c));
+      DEMO_SIGN_STYLES.forEach((s) => b1.set(doc(firestore, 'sign_styles', s.id), s));
+      await b1.commit();
+
+      // Batch 2: templates
+      const b2 = writeBatch(firestore);
+      DEMO_SIGN_TEMPLATES.forEach((t) => b2.set(doc(firestore, 'sign_templates', t.id), t));
+      await b2.commit();
+
+      // Batch 3: colors & decoration categories
+      const b3 = writeBatch(firestore);
+      DEMO_DECORATION_COLORS.forEach((col) => b3.set(doc(firestore, 'decoration_colors', col.id), col));
+      DEMO_DECORATION_CATEGORIES.forEach((dc) => b3.set(doc(firestore, 'decoration_categories', dc.id), dc));
+      await b3.commit();
+
+      // Batch 4: decorations & fields
+      const b4 = writeBatch(firestore);
+      DEMO_DECORATIONS.forEach((d) => b4.set(doc(firestore, 'decorations', d.id), d));
+      DEMO_PRODUCT_FIELDS.forEach((f) => b4.set(doc(firestore, 'product_fields', f.id), f));
+      await b4.commit();
+
+      // Batch 5: promotions, reviews, site_settings
+      const b5 = writeBatch(firestore);
+      DEMO_PROMOTIONS.forEach((p) => b5.set(doc(firestore, 'promotions', p.id), p));
+      DEMO_REVIEWS.forEach((r) => b5.set(doc(firestore, 'reviews', r.id), r));
+      Object.entries(DEMO_SITE_SETTINGS).forEach(([key, val]) => {
+        b5.set(doc(firestore, 'site_settings', key), {
+          setting_key: key,
+          setting_value: val,
+          updated_at: new Date().toISOString(),
+        });
+      });
+      await b5.commit();
+      console.log('Successfully seeded initial data to Firestore!');
+    } catch (err) {
+      console.error('Failed to seed Firestore:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  // Fetch live data from Firebase Firestore
   const refreshAllData = useCallback(async () => {
-    if (!supabase) {
-      setConnectionMode('awaiting_supabase_config');
+    if (!isFirebaseConfigured || !db) {
+      setConnectionMode('awaiting_firebase_config');
       return;
     }
 
     setIsLoading(true);
     try {
       const [
-        groupsRes,
-        catsRes,
-        stylesRes,
-        tplsRes,
-        colorsRes,
-        decCatsRes,
-        decsRes,
-        fieldsRes,
-        promosRes,
-        reviewsRes,
-        settingsRes,
+        groupsSnap,
+        catsSnap,
+        stylesSnap,
+        tplsSnap,
+        colorsSnap,
+        decCatsSnap,
+        decsSnap,
+        fieldsSnap,
+        promosSnap,
+        reviewsSnap,
+        settingsSnap,
       ] = await Promise.all([
-        supabase.from('category_groups').select('*').order('sort_order', { ascending: true }),
-        supabase.from('sign_categories').select('*').order('sort_order', { ascending: true }),
-        supabase.from('sign_styles').select('*').order('sort_order', { ascending: true }),
-        supabase.from('sign_templates').select('*').order('sort_order', { ascending: true }),
-        supabase.from('decoration_colors').select('*').order('sort_order', { ascending: true }),
-        supabase.from('decoration_categories').select('*').order('sort_order', { ascending: true }),
-        supabase.from('decorations').select('*').order('sort_order', { ascending: true }),
-        supabase.from('product_fields').select('*').order('sort_order', { ascending: true }),
-        supabase.from('promotions').select('*').order('created_at', { ascending: false }),
-        supabase.from('reviews').select('*').order('created_at', { ascending: false }),
-        supabase.from('site_settings').select('*'),
+        getDocs(query(collection(db, 'category_groups'), orderBy('sort_order', 'asc'))),
+        getDocs(query(collection(db, 'sign_categories'), orderBy('sort_order', 'asc'))),
+        getDocs(query(collection(db, 'sign_styles'), orderBy('sort_order', 'asc'))),
+        getDocs(query(collection(db, 'sign_templates'), orderBy('sort_order', 'asc'))),
+        getDocs(query(collection(db, 'decoration_colors'), orderBy('sort_order', 'asc'))),
+        getDocs(query(collection(db, 'decoration_categories'), orderBy('sort_order', 'asc'))),
+        getDocs(query(collection(db, 'decorations'), orderBy('sort_order', 'asc'))),
+        getDocs(query(collection(db, 'product_fields'), orderBy('sort_order', 'asc'))),
+        getDocs(collection(db, 'promotions')),
+        getDocs(collection(db, 'reviews')),
+        getDocs(collection(db, 'site_settings')),
       ]);
 
-      if (catsRes.error) {
-        throw catsRes.error;
-      }
+      // If Firestore is completely fresh and empty, auto-seed with default catalog
+      if (catsSnap.empty) {
+        console.log('Fresh Firestore detected. Auto-seeding initial catalog...');
+        await seedFirebaseDatabase();
+        setCategoryGroups(DEMO_CATEGORY_GROUPS);
+        setSignCategories(DEMO_SIGN_CATEGORIES);
+        setSignStyles(DEMO_SIGN_STYLES);
+        setSignTemplates(DEMO_SIGN_TEMPLATES);
+        setDecorationColors(DEMO_DECORATION_COLORS);
+        setDecorationCategories(DEMO_DECORATION_CATEGORIES);
+        setDecorations(DEMO_DECORATIONS);
+        setProductFields(DEMO_PRODUCT_FIELDS);
+        setPromotions(DEMO_PROMOTIONS);
+        setReviews(DEMO_REVIEWS);
+        setSiteSettings(DEMO_SITE_SETTINGS);
+      } else {
+        if (!groupsSnap.empty) setCategoryGroups(groupsSnap.docs.map((d) => d.data() as CategoryGroup));
+        if (!catsSnap.empty) setSignCategories(catsSnap.docs.map((d) => d.data() as SignCategory));
+        if (!stylesSnap.empty) setSignStyles(stylesSnap.docs.map((d) => d.data() as SignStyle));
+        if (!tplsSnap.empty) setSignTemplates(tplsSnap.docs.map((d) => d.data() as SignTemplate));
+        if (!colorsSnap.empty) setDecorationColors(colorsSnap.docs.map((d) => d.data() as DecorationColor));
+        if (!decCatsSnap.empty) setDecorationCategories(decCatsSnap.docs.map((d) => d.data() as DecorationCategory));
+        if (!decsSnap.empty) setDecorations(decsSnap.docs.map((d) => d.data() as DecorationItem));
+        if (!fieldsSnap.empty) setProductFields(fieldsSnap.docs.map((d) => d.data() as ProductField));
+        if (!promosSnap.empty) setPromotions(promosSnap.docs.map((d) => d.data() as Promotion));
+        if (!reviewsSnap.empty) setReviews(reviewsSnap.docs.map((d) => d.data() as ReviewRecord));
 
-      if (groupsRes.data?.length) setCategoryGroups(groupsRes.data as CategoryGroup[]);
-      if (catsRes.data?.length) setSignCategories(catsRes.data as SignCategory[]);
-      if (stylesRes.data?.length) setSignStyles(stylesRes.data as SignStyle[]);
-      if (tplsRes.data?.length) setSignTemplates(tplsRes.data as SignTemplate[]);
-      if (colorsRes.data?.length) setDecorationColors(colorsRes.data as DecorationColor[]);
-      if (decCatsRes.data?.length) setDecorationCategories(decCatsRes.data as DecorationCategory[]);
-      if (decsRes.data?.length) setDecorations(decsRes.data as DecorationItem[]);
-      if (fieldsRes.data?.length) setProductFields(fieldsRes.data as ProductField[]);
-      if (promosRes.data?.length) setPromotions(promosRes.data as Promotion[]);
-      if (reviewsRes.data?.length) setReviews(reviewsRes.data as ReviewRecord[]);
-
-      if (settingsRes.data?.length) {
-        const merged = { ...DEMO_SITE_SETTINGS };
-        for (const row of settingsRes.data) {
-          if (row.setting_key in merged) {
-            (merged as Record<string, unknown>)[row.setting_key] = row.setting_value;
-          }
+        if (!settingsSnap.empty) {
+          const merged = { ...DEMO_SITE_SETTINGS };
+          settingsSnap.docs.forEach((docSnap) => {
+            const data = docSnap.data();
+            if (data.setting_key && data.setting_key in merged) {
+              (merged as Record<string, unknown>)[data.setting_key] = data.setting_value;
+            }
+          });
+          setSiteSettings(merged);
         }
-        setSiteSettings(merged);
       }
 
-      // Check auth session & load orders/favorites if signed in
-      const { data: sessionData } = await supabase.auth.getSession();
-      const authUser = sessionData.session?.user;
-      if (authUser) {
-        const [{ data: prof }, { data: roleRow }, { data: favRows }] = await Promise.all([
-          supabase.from('profiles').select('*').eq('id', authUser.id).maybeSingle(),
-          supabase.from('user_roles').select('*').eq('user_id', authUser.id).maybeSingle(),
-          supabase.from('favorites').select('template_id').eq('user_id', authUser.id),
+      // Check current logged-in user in Firebase Auth
+      const firebaseUser = auth?.currentUser;
+      if (firebaseUser) {
+        const [profSnap, roleSnap, favSnap] = await Promise.all([
+          getDoc(doc(db, 'profiles', firebaseUser.uid)),
+          getDoc(doc(db, 'user_roles', firebaseUser.uid)),
+          getDocs(query(collection(db, 'favorites'), where('user_id', '==', firebaseUser.uid))),
         ]);
-        const userRole: UserRole = (roleRow?.role as UserRole) ?? 'customer';
+
+        const profData = profSnap.exists() ? profSnap.data() : null;
+        const roleData = roleSnap.exists() ? roleSnap.data() : null;
+        const userRole: UserRole = (roleData?.role as UserRole) ?? 'customer';
+
         setCurrentUser({
-          id: authUser.id,
-          email: authUser.email ?? '',
-          full_name: prof?.full_name ?? authUser.user_metadata?.full_name ?? 'ผู้ใช้งาน',
-          phone: prof?.phone ?? '',
-          contact_channel: prof?.contact_channel ?? '',
+          id: firebaseUser.uid,
+          email: firebaseUser.email ?? '',
+          full_name: profData?.full_name ?? firebaseUser.displayName ?? 'ผู้ใช้งาน',
+          phone: profData?.phone ?? '',
+          contact_channel: profData?.contact_channel ?? '',
           role: userRole,
-          created_at: prof?.created_at ?? new Date().toISOString(),
+          created_at: profData?.created_at ?? new Date().toISOString(),
         });
-        if (favRows) {
-          setFavorites(favRows.map((f: { template_id: string }) => f.template_id));
+
+        if (!favSnap.empty) {
+          setFavorites(favSnap.docs.map((d) => d.data().template_id));
         }
 
-        // Load orders visible to this user (RLS filters automatically: own orders for customer, all for admin)
-        const { data: orderRows } = await supabase
-          .from('orders')
-          .select('*, order_items(*, order_item_fields(*), order_item_decorations(*)), order_status_history(*)')
-          .order('created_at', { ascending: false })
-          .limit(100);
+        // Load orders
+        const isStaffOrAdmin = ['admin', 'super_admin', 'staff'].includes(userRole);
+        const orderQuery = isStaffOrAdmin
+          ? query(collection(db, 'orders'), orderBy('created_at', 'desc'), limit(100))
+          : query(
+              collection(db, 'orders'),
+              where('user_id', '==', firebaseUser.uid),
+              orderBy('created_at', 'desc'),
+              limit(50)
+            );
 
-        const mappedOrders: OrderRecord[] = (orderRows ?? []).map((o: Record<string, unknown>) => ({
-            ...(o as unknown as OrderRecord),
-            items: ((o.order_items as Array<Record<string, unknown>>) ?? []).map((oi) => ({
-              ...(oi as unknown as OrderItemRecord),
-              fields: (oi.order_item_fields as OrderItemFieldSnapshot[]) ?? [],
-              decorations: (oi.order_item_decorations as OrderItemDecorationSnapshot[]) ?? [],
-            })),
-            history: (o.order_status_history as OrderRecord['history']) ?? [],
-          }));
-        setOrders(mappedOrders);
+        const ordersSnap = await getDocs(orderQuery);
+        setOrders(ordersSnap.docs.map((d) => d.data() as OrderRecord));
       } else {
         setCurrentUser(null);
         setFavorites([]);
         setOrders([]);
       }
 
-      setConnectionMode('supabase_connected');
-      setConnectionMessage('เชื่อมต่อฐานข้อมูล Supabase PostgreSQL สำเร็จ');
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'ไม่สามารถดึงข้อมูลจาก Supabase ได้';
-      setConnectionMode('supabase_error');
-      setConnectionMessage(
-        `เชื่อมต่อ Supabase แล้ว แต่ยังไม่ได้รัน SQL Migration หรือพบข้อผิดพลาด (${msg}) — ระบบแสดงข้อมูลเริ่มต้นให้ใช้งานชั่วคราว`
-      );
+      setConnectionMode('firebase_connected');
+      setConnectionMessage('เชื่อมต่อฐานข้อมูล Google Firebase Firestore สำเร็จ');
+    } catch (err: unknown) {
+      console.error('Firebase connection error:', err);
+      setConnectionMode('firebase_error');
+      setConnectionMessage(`เชื่อมต่อ Firebase ไม่สำเร็จ: ${(err as Error).message}`);
     } finally {
       setIsLoading(false);
     }
+  }, [seedFirebaseDatabase]);
+
+  // Listen to Firebase Auth state changes
+  useEffect(() => {
+    if (!isFirebaseConfigured || !auth) return;
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser && db) {
+        try {
+          const [profSnap, roleSnap] = await Promise.all([
+            getDoc(doc(db, 'profiles', firebaseUser.uid)),
+            getDoc(doc(db, 'user_roles', firebaseUser.uid)),
+          ]);
+          const profData = profSnap.exists() ? profSnap.data() : null;
+          const roleData = roleSnap.exists() ? roleSnap.data() : null;
+          const uRole: UserRole = (roleData?.role as UserRole) ?? 'customer';
+
+          setCurrentUser({
+            id: firebaseUser.uid,
+            email: firebaseUser.email ?? '',
+            full_name: profData?.full_name ?? firebaseUser.displayName ?? 'ผู้ใช้งาน',
+            phone: profData?.phone ?? '',
+            contact_channel: profData?.contact_channel ?? '',
+            role: uRole,
+            created_at: profData?.created_at ?? new Date().toISOString(),
+          });
+        } catch (e) {
+          console.error('Failed to resolve Firebase profile:', e);
+        }
+      }
+    });
+    return () => unsubscribe();
   }, []);
 
+  // Initial load
   useEffect(() => {
-    if (isSupabaseConfigured) {
-      void refreshAllData();
+    if (isFirebaseConfigured) {
+      refreshAllData();
     }
   }, [refreshAllData]);
 
-  // Auth handlers
-  const loginWithEmail = useCallback(async (email: string, password: string) => {
-    const cleanEmail = email.trim().toLowerCase();
-    if (supabase) {
-      const { error } = await supabase.auth.signInWithPassword({ email: cleanEmail, password });
-      if (error) return { error: error.message };
-      await refreshAllData();
-      return {};
-    }
+  // Auth Functions
+  const loginWithEmail = useCallback(
+    async (email: string, password: string): Promise<{ error?: string }> => {
+      const cleanEmail = email.trim().toLowerCase();
+      if (isFirebaseConfigured && auth && db) {
+        try {
+          const cred = await signInWithEmailAndPassword(auth, cleanEmail, password);
+          const [profSnap, roleSnap] = await Promise.all([
+            getDoc(doc(db, 'profiles', cred.user.uid)),
+            getDoc(doc(db, 'user_roles', cred.user.uid)),
+          ]);
+          const profData = profSnap.exists() ? profSnap.data() : null;
+          const roleData = roleSnap.exists() ? roleSnap.data() : null;
+          const uRole: UserRole = (roleData?.role as UserRole) ?? 'customer';
 
-    // Demo/Sandbox login check
-    const found = profiles.find((p) => p.email.toLowerCase() === cleanEmail);
-    if (found) {
-      setCurrentUser(found);
-      return {};
-    }
+          const userProfile: Profile = {
+            id: cred.user.uid,
+            email: cred.user.email ?? cleanEmail,
+            full_name: profData?.full_name ?? cred.user.displayName ?? 'ผู้ใช้งาน',
+            phone: profData?.phone ?? '',
+            contact_channel: profData?.contact_channel ?? '',
+            role: uRole,
+            created_at: profData?.created_at ?? new Date().toISOString(),
+          };
+          setCurrentUser(userProfile);
+          await refreshAllData();
+          return {};
+        } catch (err: unknown) {
+          return { error: `เข้าสู่ระบบไม่สำเร็จ: ${(err as Error).message}` };
+        }
+      }
 
-    // Create customer session in sandbox mode
-    const newProfile: Profile = {
-      id: `user-${Date.now()}`,
-      email: cleanEmail,
-      full_name: cleanEmail.split('@')[0] || 'ลูกค้าสมาชิก',
-      phone: '081-000-0000',
-      contact_channel: 'LINE',
-      role: cleanEmail.includes('admin') ? 'super_admin' : 'customer',
-      created_at: new Date().toISOString(),
-    };
-    setProfiles((prev) => [...prev, newProfile]);
-    setUserRoles((prev) => [
-      ...prev,
-      { id: `ur-${Date.now()}`, user_id: newProfile.id, role: newProfile.role ?? 'customer', created_at: new Date().toISOString() },
-    ]);
-    setCurrentUser(newProfile);
-    return {};
-  }, [profiles, refreshAllData]);
+      // Demo fallback mode
+      const found = profiles.find((p) => p.email.toLowerCase() === cleanEmail);
+      if (found) {
+        setCurrentUser(found);
+        return {};
+      }
+      return { error: 'ไม่พบบัญชีผู้ใช้งานนี้ในระบบจำลอง (คุณสามารถใช้บัญชี Demo ในหน้าร้านได้ทันที)' };
+    },
+    [profiles, refreshAllData]
+  );
 
   const registerWithEmail = useCallback(
     async (params: {
@@ -557,27 +677,50 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       full_name: string;
       phone: string;
       contact_channel: string;
-    }) => {
+    }): Promise<{ error?: string }> => {
       const cleanEmail = params.email.trim().toLowerCase();
-      if (supabase) {
-        const { error } = await supabase.auth.signUp({
-          email: cleanEmail,
-          password: params.password,
-          options: {
-            data: {
-              full_name: params.full_name,
-              phone: params.phone,
-              contact_channel: params.contact_channel,
-            },
-          },
-        });
-        if (error) return { error: error.message };
-        await refreshAllData();
-        return {};
+      if (isFirebaseConfigured && auth && db) {
+        try {
+          const cred = await createUserWithEmailAndPassword(auth, cleanEmail, params.password);
+          const uid = cred.user.uid;
+          const nowIso = new Date().toISOString();
+
+          // Check if this is the first user ever registered: if so, grant super_admin!
+          const rolesSnap = await getDocs(collection(db, 'user_roles'));
+          const isFirstUser = rolesSnap.empty;
+          const assignedRole: UserRole = isFirstUser ? 'super_admin' : 'customer';
+
+          const newProfile: Profile = {
+            id: uid,
+            email: cleanEmail,
+            full_name: params.full_name.trim(),
+            phone: params.phone.trim(),
+            contact_channel: params.contact_channel.trim(),
+            role: assignedRole,
+            created_at: nowIso,
+          };
+
+          await Promise.all([
+            setDoc(doc(db, 'profiles', uid), newProfile),
+            setDoc(doc(db, 'user_roles', uid), {
+              id: `ur-${uid}`,
+              user_id: uid,
+              role: assignedRole,
+              created_at: nowIso,
+            }),
+          ]);
+
+          setCurrentUser(newProfile);
+          await refreshAllData();
+          return {};
+        } catch (err: unknown) {
+          return { error: `ลงทะเบียนไม่สำเร็จ: ${(err as Error).message}` };
+        }
       }
 
-      const newProfile: Profile = {
-        id: `user-${Date.now()}`,
+      // Demo fallback mode
+      const newProf: Profile = {
+        id: `usr-${Date.now()}`,
         email: cleanEmail,
         full_name: params.full_name.trim(),
         phone: params.phone.trim(),
@@ -585,24 +728,21 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         role: 'customer',
         created_at: new Date().toISOString(),
       };
-      setProfiles((prev) => [...prev, newProfile]);
-      setUserRoles((prev) => [
-        ...prev,
-        { id: `ur-${Date.now()}`, user_id: newProfile.id, role: 'customer', created_at: new Date().toISOString() },
-      ]);
-      setCurrentUser(newProfile);
+      setProfiles((prev) => [...prev, newProf]);
+      setCurrentUser(newProf);
       return {};
     },
     [refreshAllData]
   );
 
   const logout = useCallback(async () => {
-    if (supabase) {
-      await supabase.auth.signOut();
+    if (isFirebaseConfigured && auth) {
+      await firebaseSignOut(auth);
     }
     setCurrentUser(null);
     setOrders([]);
     localStorage.removeItem(STORAGE_ORDERS_KEY);
+    localStorage.removeItem(STORAGE_USER_KEY);
   }, []);
 
   const updateCurrentUserProfile = useCallback(
@@ -612,16 +752,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setCurrentUser(updated);
       setProfiles((prev) => prev.map((p) => (p.id === currentUser.id ? updated : p)));
 
-      if (supabase) {
-        await supabase
-          .from('profiles')
-          .update({
-            full_name: updated.full_name,
-            phone: updated.phone,
-            contact_channel: updated.contact_channel,
-            updated_at: updated.updated_at,
-          })
-          .eq('id', currentUser.id);
+      if (isFirebaseConfigured && db) {
+        await updateDoc(doc(db, 'profiles', currentUser.id), {
+          full_name: updated.full_name,
+          phone: updated.phone,
+          contact_channel: updated.contact_channel,
+          updated_at: updated.updated_at,
+        });
       }
     },
     [currentUser]
@@ -649,17 +786,16 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const next = exists ? favorites.filter((id) => id !== templateId) : [...favorites, templateId];
       setFavorites(next);
 
-      if (supabase && currentUser) {
+      if (isFirebaseConfigured && db && currentUser) {
+        const favDocId = `${currentUser.id}_${templateId}`;
         if (exists) {
-          await supabase
-            .from('favorites')
-            .delete()
-            .eq('user_id', currentUser.id)
-            .eq('template_id', templateId);
+          await deleteDoc(doc(db, 'favorites', favDocId));
         } else {
-          await supabase.from('favorites').insert({
+          await setDoc(doc(db, 'favorites', favDocId), {
+            id: favDocId,
             user_id: currentUser.id,
             template_id: templateId,
+            created_at: new Date().toISOString(),
           });
         }
       }
@@ -667,265 +803,21 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     [favorites, currentUser]
   );
 
-  // Transactional Order Submission (PART 13)
-  const submitOrder = useCallback(
-    async (input: SubmitOrderInput): Promise<OrderRecord> => {
-      // 1. Idempotency check
-      if (input.idempotency_key && processedIdempotencyKeys[input.idempotency_key]) {
-        return processedIdempotencyKeys[input.idempotency_key];
-      }
-
-      if (input.customer_name.trim().length < 2) {
-        throw new Error('กรุณากรอกชื่อผู้สั่งซื้ออย่างน้อย 2 ตัวอักษร');
-      }
-      if (input.customer_contact.trim().length < 4) {
-        throw new Error('กรุณากรอกเบอร์โทรศัพท์หรือช่องทางติดต่อให้ครบถ้วน');
-      }
-      if (!input.items.length) {
-        throw new Error('กรุณาเลือกรายการป้ายอย่างน้อย 1 รายการ');
-      }
-
-      // 2. Verify all selected categories, styles, templates, and decorations are still active
-      for (const draft of input.items) {
-        const cat = signCategories.find((c) => c.id === draft.sign_category_id && c.is_active);
-        if (!cat) throw new Error('ประเภทป้ายที่เลือกไม่พร้อมใช้งานในขณะนี้');
-
-        const style = signStyles.find((s) => s.id === draft.style_id && s.is_active);
-        if (!style) throw new Error('สไตล์ป้ายที่เลือกไม่พร้อมใช้งานในขณะนี้');
-
-        const tpl = signTemplates.find(
-          (t) => t.id === draft.template_id && t.is_active && t.status === 'published'
-        );
-        if (!tpl) throw new Error('เทมเพลตที่เลือกถูกปิดใช้งานแล้ว กรุณาเลือกเทมเพลตใหม่');
-
-        if (tpl.style_id !== style.id) {
-          throw new Error(`เทมเพลต ${tpl.code} ไม่ตรงกับสไตล์ที่เลือก กรุณาตรวจสอบอีกครั้ง`);
-        }
-
-        for (const decId of draft.decoration_ids) {
-          const dec = decorations.find((d) => d.id === decId && d.is_active);
-          if (!dec) {
-            throw new Error('ของตกแต่งบางรายการถูกปิดใช้งานแล้ว กรุณาตรวจสอบรายการของตกแต่ง');
-          }
-        }
-
-        // Server-side strict form field validation against active product_fields
-        const catFields = productFields.filter(
-          (f) => f.sign_category_id === draft.sign_category_id && f.is_active
-        );
-        for (const pf of catFields) {
-          if (pf.is_required) {
-            const val = draft.field_values[pf.field_key]?.trim() ?? '';
-            const file = draft.field_files[pf.field_key]?.trim() ?? '';
-            if (pf.field_type === 'image_upload') {
-              if (!val && !file) {
-                throw new Error(`กรุณาอัปโหลดรูปภาพหรือระบุข้อมูลสำหรับฟิลด์ "${pf.label}" ในประเภทป้าย "${cat.name}"`);
-              }
-            } else if (!val) {
-              throw new Error(`กรุณากรอกข้อมูลสำหรับฟิลด์ "${pf.label}" ในประเภทป้าย "${cat.name}"`);
-            }
-          }
-        }
-      }
-
-      // 3. Server-side / authoritative price calculation
-      const pricing = calculateOrderPricing({
-        draftItems: input.items,
-        categories: signCategories,
-        styles: signStyles,
-        templates: signTemplates,
-        promotions,
-        promotionCode: input.promotion_code,
-        serviceFee: siteSettings.contact_footer.service_fee ?? 0,
-      });
-
-      // 4. If connected to live Supabase, invoke transactional PostgreSQL RPC `submit_custom_sign_order`
-      if (supabase && connectionMode === 'supabase_connected') {
-        const rpcPayload = {
-          idempotency_key: input.idempotency_key,
-          customer_name: input.customer_name.trim(),
-          customer_contact: input.customer_contact.trim(),
-          customer_email: input.customer_email.trim(),
-          delivery_channel: input.delivery_channel,
-          customer_note: input.customer_note.trim(),
-          promotion_code: input.promotion_code?.trim() || '',
-          items: input.items.map((draft) => {
-            const catFields = productFields.filter(
-              (f) => f.sign_category_id === draft.sign_category_id && f.is_active
-            );
-            return {
-              sign_category_id: draft.sign_category_id,
-              style_id: draft.style_id,
-              template_id: draft.template_id,
-              quantity: draft.quantity,
-              item_note: draft.item_note,
-              decoration_ids: draft.decoration_ids,
-              fields: catFields.map((pf) => ({
-                product_field_id: pf.id,
-                value: draft.field_values[pf.field_key] ?? '',
-                file_storage_path: draft.field_files[pf.field_key] ?? '',
-              })),
-            };
-          }),
-        };
-
-        const { data: rpcResult, error: rpcError } = await supabase.rpc(
-          'submit_custom_sign_order',
-          { p_payload: rpcPayload }
-        );
-
-        if (rpcError) {
-          throw new Error(`บันทึกคำสั่งซื้อไม่สำเร็จ: ${rpcError.message}`);
-        }
-
-        // Build complete OrderRecord with immutable snapshots & server-authoritative financials
-        const orderId = rpcResult.order_id as string;
-        const orderNumber = rpcResult.order_number as string;
-        const trackingToken = rpcResult.tracking_token as string;
-        let createdOrder = buildSnapshotOrderRecord({
-          orderId,
-          orderNumber,
-          trackingToken,
-          input,
-          pricing,
-          serverFinancials: {
-            subtotal_amount: Number(rpcResult.subtotal_amount ?? pricing.subtotal),
-            discount_amount: Number(rpcResult.discount_amount ?? pricing.discount_amount),
-            service_fee: Number(rpcResult.service_fee ?? pricing.service_fee),
-            total_amount: Number(rpcResult.total_amount ?? pricing.grand_total),
-          },
-        });
-
-        // Read back the committed snapshot so confirmation details use the same catalog prices
-        // that PostgreSQL stored, even if this tab had stale catalog data.
-        const { data: committedSnapshot, error: snapshotError } = await supabase.rpc(
-          'track_order_secure',
-          {
-            p_order_number: orderNumber,
-            p_tracking_token: trackingToken,
-          }
-        );
-        if (!snapshotError && committedSnapshot) {
-          const serverOrder = committedSnapshot as TrackedOrderRecord;
-          const matchedItems = new Set<number>();
-          createdOrder = {
-            ...createdOrder,
-            ...serverOrder,
-            customer_contact: input.customer_contact.trim(),
-            customer_email: input.customer_email.trim(),
-            customer_note: input.customer_note.trim(),
-            internal_note: '',
-            tracking_access_token: trackingToken,
-            idempotency_key: input.idempotency_key,
-            items: serverOrder.items.map((serverItem, fallbackIndex) => {
-              const index = createdOrder.items.findIndex((candidate, candidateIndex) =>
-                !matchedItems.has(candidateIndex) &&
-                candidate.sign_category_id === serverItem.sign_category_id &&
-                candidate.style_id === serverItem.style_id &&
-                candidate.template_id === serverItem.template_id &&
-                candidate.quantity === serverItem.quantity
-              );
-              const sourceIndex = index >= 0 ? index : fallbackIndex;
-              matchedItems.add(sourceIndex);
-              const clientItem = createdOrder.items[sourceIndex];
-              return {
-                ...clientItem,
-                ...serverItem,
-                // Tracking masks sensitive values. Keep the just-submitted values on this private
-                // confirmation view while taking names and prices from the committed DB snapshot.
-                fields: clientItem?.fields ?? serverItem.fields,
-                decorations: serverItem.decorations,
-              };
-            }) as OrderItemRecord[],
-          };
-        }
-
-        setOrders((prev) => [createdOrder, ...prev]);
-        setProcessedIdempotencyKeys((prev) => ({
-          ...prev,
-          [input.idempotency_key]: createdOrder,
-        }));
-        return createdOrder;
-      }
-
-      // 5. Atomic Sandbox Transaction (creates immutable price & product snapshots)
-      // Check promotion quota and update used_count in demo mode
-      const cleanPromo = input.promotion_code?.trim().toUpperCase() ?? '';
-      if (cleanPromo) {
-        const promo = promotions.find((p) => p.code.toUpperCase() === cleanPromo && p.is_active);
-        if (!promo) {
-          throw new Error(`ไม่พบรหัสส่วนลด ${cleanPromo} หรือโปรโมชั่นนี้ถูกปิดใช้งานแล้ว`);
-        }
-        if (promo.usage_limit !== null && promo.usage_limit !== undefined && promo.used_count >= promo.usage_limit) {
-          throw new Error(`รหัสส่วนลด ${promo.code} มีผู้ใช้งานครบตามจำนวนสิทธิ์แล้ว`);
-        }
-        if (pricing.subtotal < promo.min_order_amount) {
-          throw new Error(`รหัสส่วนลด ${promo.code} ใช้ได้เมื่อมียอดสั่งซื้อขั้นต่ำ ${promo.min_order_amount.toLocaleString()} บาทขึ้นไป`);
-        }
-        // Increment used_count in state
-        setPromotions((prev) =>
-          prev.map((p) => (p.id === promo.id ? { ...p, used_count: p.used_count + 1 } : p))
-        );
-      }
-
-      const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-      const randomPart = Math.random().toString(36).substring(2, 7).toUpperCase();
-      const orderNumber = `CSS-${datePart}-${randomPart}`;
-      const trackingToken = Math.random().toString(36).substring(2, 12) + Math.random().toString(36).substring(2, 12);
-      const orderId = `ord-${Date.now()}`;
-
-      const createdOrder = buildSnapshotOrderRecord({
-        orderId,
-        orderNumber,
-        trackingToken,
-        input,
-        pricing,
-      });
-
-      setOrders((prev) => [createdOrder, ...prev]);
-      setProcessedIdempotencyKeys((prev) => ({
-        ...prev,
-        [input.idempotency_key]: createdOrder,
-      }));
-      return createdOrder;
-    },
-    [
-      processedIdempotencyKeys,
-      signCategories,
-      signStyles,
-      signTemplates,
-      decorations,
-      promotions,
-      productFields,
-      siteSettings.contact_footer.service_fee,
-      connectionMode,
-      currentUser,
-      decorationColors,
-      decorationCategories,
-    ]
-  );
-
+  // Order snapshot record builder
   function buildSnapshotOrderRecord(params: {
     orderId: string;
     orderNumber: string;
     trackingToken: string;
     input: SubmitOrderInput;
     pricing: ReturnType<typeof calculateOrderPricing>;
-    serverFinancials?: {
-      subtotal_amount: number;
-      discount_amount: number;
-      service_fee: number;
-      total_amount: number;
-    };
   }): OrderRecord {
-    const { orderId, orderNumber, trackingToken, input, pricing, serverFinancials } = params;
+    const { orderId, orderNumber, trackingToken, input, pricing } = params;
     const nowIso = new Date().toISOString();
 
-    const snapshotItems: OrderItemRecord[] = input.items.map((draft, idx) => {
-      const cat = signCategories.find((c) => c.id === draft.sign_category_id)!;
-      const style = signStyles.find((s) => s.id === draft.style_id)!;
-      const tpl = signTemplates.find((t) => t.id === draft.template_id)!;
-      const breakdown = pricing.items[idx];
+    const snapshotItems: OrderItemRecord[] = input.items.map((draft) => {
+      const cat = signCategories.find((c) => c.id === draft.sign_category_id);
+      const style = signStyles.find((s) => s.id === draft.style_id);
+      const tpl = signTemplates.find((t) => t.id === draft.template_id);
 
       const catFields = productFields.filter(
         (f) => f.sign_category_id === draft.sign_category_id && f.is_active
@@ -942,47 +834,48 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         is_sensitive: pf.is_sensitive,
       }));
 
-      const snapshotDecorations: OrderItemDecorationSnapshot[] = draft.decoration_ids
-        .map((decId) => {
-          const dec = decorations.find((d) => d.id === decId);
-          if (!dec) return null;
-          const color = decorationColors.find((c) => c.id === dec.color_id);
-          const dCat = decorationCategories.find((catItem) => catItem.id === dec.category_id);
-          return {
-            id: `oid-${Date.now()}-${dec.id}`,
-            decoration_id: dec.id,
-            snapshot_decoration_code: dec.code,
-            snapshot_decoration_name: dec.name,
-            snapshot_color_name: color?.name ?? '-',
-            snapshot_category_name: dCat?.name ?? '-',
-            snapshot_image_url: dec.image_url,
-            snapshot_price: 0 as const,
-          };
-        })
-        .filter((x): x is NonNullable<typeof x> => x !== null);
+      const snapshotDecorations: OrderItemDecorationSnapshot[] = [];
+      for (const decId of draft.decoration_ids) {
+        const dec = decorations.find((d) => d.id === decId);
+        if (!dec) continue;
+        const color = decorationColors.find((c) => c.id === dec.color_id);
+        const dCat = decorationCategories.find((catItem) => catItem.id === dec.category_id);
+        snapshotDecorations.push({
+          id: `oid-${Date.now()}-${dec.id}`,
+          decoration_id: dec.id,
+          snapshot_decoration_code: dec.code,
+          snapshot_decoration_name: dec.name,
+          snapshot_image_url: dec.image_url,
+          snapshot_color_name: color?.name ?? '',
+          snapshot_category_name: dCat?.name ?? '',
+          snapshot_price: 0,
+        });
+      }
 
       return {
-        id: `oi-${Date.now()}-${idx}`,
+        id: `oi-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
         order_id: orderId,
-        sign_category_id: cat.id,
-        style_id: style.id,
-        template_id: tpl.id,
-        snapshot_sign_type_name: cat.name,
-        snapshot_style_name: style.name,
-        snapshot_template_code: tpl.code,
-        snapshot_template_name: tpl.name,
-        snapshot_template_image: tpl.preview_image_url,
-        snapshot_base_price: breakdown.base_price,
-        snapshot_style_price: breakdown.style_price,
+        sign_category_id: draft.sign_category_id,
+        style_id: draft.style_id,
+        template_id: draft.template_id,
+        snapshot_sign_type_name: cat?.name ?? 'ป้ายสั่งทำพิเศษ',
+        snapshot_style_name: style?.name ?? 'Minimal',
+        snapshot_template_code: tpl?.code ?? 'TPL-001',
+        snapshot_template_name: tpl?.name ?? 'เทมเพลตต้นแบบ',
+        snapshot_template_image: tpl?.preview_image_url ?? '/placeholders/templates/tpl-min-01.svg',
+        snapshot_base_price: cat?.base_price ?? 59,
+        snapshot_style_price: style?.price_modifier ?? 0,
         snapshot_addon_price: 0,
         snapshot_decorations_price: 0,
-        item_total_price: breakdown.line_total,
-        quantity: breakdown.quantity,
-        item_note: draft.item_note,
+        item_total_price: (cat?.base_price ?? 59) + (style?.price_modifier ?? 0),
+        quantity: draft.quantity,
+        item_note: draft.item_note ?? '',
         fields: snapshotFields,
         decorations: snapshotDecorations,
       };
     });
+
+    const contactLookup = input.customer_contact.replace(/\D/g, '');
 
     return {
       id: orderId,
@@ -994,17 +887,17 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       delivery_channel: input.delivery_channel,
       customer_note: input.customer_note.trim(),
       internal_note: '',
-      contact_lookup_key: input.customer_contact.trim().toLowerCase().replace(/\s+/g, ''),
+      contact_lookup_key: contactLookup,
       tracking_access_token: trackingToken,
       status: 'pending_review',
-      subtotal_amount: serverFinancials ? serverFinancials.subtotal_amount : pricing.subtotal,
-      discount_amount: serverFinancials ? serverFinancials.discount_amount : pricing.discount_amount,
-      service_fee: serverFinancials ? serverFinancials.service_fee : pricing.service_fee,
-      total_amount: serverFinancials ? serverFinancials.total_amount : pricing.grand_total,
+      subtotal_amount: pricing.subtotal,
+      discount_amount: pricing.discount_amount,
+      service_fee: pricing.service_fee,
+      total_amount: pricing.grand_total,
       promotion_code: pricing.applied_promotion?.code ?? null,
       is_paid: false,
       idempotency_key: input.idempotency_key,
-      is_demo: false, // Real order created by user!
+      is_demo: false,
       created_at: nowIso,
       updated_at: nowIso,
       items: snapshotItems,
@@ -1022,12 +915,90 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
   }
 
-  // Secure Order Tracking (Requires tracking_access_token for guests or auth ownership for users)
+  // Transactional Order Submission
+  const submitOrder = useCallback(
+    async (input: SubmitOrderInput): Promise<OrderRecord> => {
+      if (input.idempotency_key && processedIdempotencyKeys[input.idempotency_key]) {
+        return processedIdempotencyKeys[input.idempotency_key];
+      }
+
+      if (input.customer_name.trim().length < 2) {
+        throw new Error('กรุณากรอกชื่อผู้สั่งซื้ออย่างน้อย 2 ตัวอักษร');
+      }
+      if (input.customer_contact.trim().length < 4) {
+        throw new Error('กรุณากรอกเบอร์โทรศัพท์หรือช่องทางติดต่อให้ครบถ้วน');
+      }
+      if (!input.items.length) {
+        throw new Error('กรุณาเลือกรายการป้ายอย่างน้อย 1 รายการ');
+      }
+
+      // Authoritative pricing
+      const pricing = calculateOrderPricing({
+        draftItems: input.items,
+        categories: signCategories,
+        styles: signStyles,
+        templates: signTemplates,
+        promotions,
+        promotionCode: input.promotion_code,
+        serviceFee: siteSettings.contact_footer.service_fee ?? 0,
+      });
+
+      const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+      const randomPart = Math.random().toString(36).substring(2, 7).toUpperCase();
+      const orderNumber = `CSS-${datePart}-${randomPart}`;
+      const trackingToken = Math.random().toString(36).substring(2, 12) + Math.random().toString(36).substring(2, 12);
+      const orderId = `ord-${Date.now()}`;
+
+      const createdOrder = buildSnapshotOrderRecord({
+        orderId,
+        orderNumber,
+        trackingToken,
+        input,
+        pricing,
+      });
+
+      // Save to Firebase Firestore
+      if (isFirebaseConfigured && db) {
+        await setDoc(doc(db, 'orders', createdOrder.id), createdOrder);
+
+        // If promo used, increment used_count in Firestore
+        if (pricing.applied_promotion) {
+          try {
+            await updateDoc(doc(db, 'promotions', pricing.applied_promotion.id), {
+              used_count: pricing.applied_promotion.used_count + 1,
+            });
+          } catch (e) {
+            console.error('Failed to update promo count:', e);
+          }
+        }
+
+        await appendAuditLog('SUBMIT_ORDER', 'orders', createdOrder.id, {
+          order_number: createdOrder.order_number,
+          total_amount: createdOrder.total_amount,
+        });
+      }
+
+      setOrders((prev) => [createdOrder, ...prev]);
+      setProcessedIdempotencyKeys((prev) => ({
+        ...prev,
+        [input.idempotency_key]: createdOrder,
+      }));
+      return createdOrder;
+    },
+    [
+      processedIdempotencyKeys,
+      signCategories,
+      signStyles,
+      signTemplates,
+      promotions,
+      siteSettings.contact_footer.service_fee,
+      appendAuditLog,
+    ]
+  );
+
+  // Secure Order Tracking
   const trackOrderSecure = useCallback(
-    async (
-      orderNumber: string,
-      trackingToken?: string
-    ): Promise<TrackedOrderRecord | null> => {
+    async (orderNumber: string, trackingToken?: string): Promise<TrackedOrderRecord | null> => {
       const cleanOrderNo = orderNumber.trim().toUpperCase();
       const cleanToken = trackingToken ? trackingToken.trim().toLowerCase() : '';
 
@@ -1035,44 +1006,42 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         throw new Error('กรุณาระบุหมายเลขออเดอร์ให้ถูกต้อง');
       }
 
-      if (supabase && connectionMode === 'supabase_connected') {
-        const { data, error } = await supabase.rpc('track_order_secure', {
-          p_order_number: cleanOrderNo,
-          p_tracking_token: cleanToken || null,
-        });
-        if (error) throw new Error(error.message);
-        if (data) return data as TrackedOrderRecord;
-        return null;
+      let found: OrderRecord | undefined;
+
+      if (isFirebaseConfigured && db) {
+        const q = query(collection(db, 'orders'), where('order_number', '==', cleanOrderNo), limit(1));
+        const snap = await getDocs(q);
+        if (!snap.empty) {
+          found = snap.docs[0].data() as OrderRecord;
+        }
       }
 
-      // Demo mode: verify authorization
-      const found = orders.find((o) => o.order_number.toUpperCase() === cleanOrderNo);
+      if (!found) {
+        found = orders.find((o) => o.order_number.toUpperCase() === cleanOrderNo);
+      }
+
       if (!found) return null;
 
       const isOwner = currentUser && found.user_id && found.user_id === currentUser.id;
-      const isAdminOrStaff =
-        currentUser?.role && ['admin', 'super_admin', 'staff'].includes(currentUser.role);
+      const isAdminOrStaff = currentUser?.role && ['admin', 'super_admin', 'staff'].includes(currentUser.role);
       const isTokenValid = cleanToken && found.tracking_access_token.toLowerCase() === cleanToken;
 
       if (!isOwner && !isAdminOrStaff && !isTokenValid) {
         return null;
       }
 
-      // Return copy with sensitive fields masked for public tracking protection
       return {
         ...found,
         items: found.items.map((item) => ({
           ...item,
           fields: item.fields.map((f) => ({
             ...f,
-            field_value: f.is_sensitive
-              ? '*'.repeat(Math.max(4, f.field_value.length))
-              : f.field_value,
+            field_value: f.is_sensitive ? '*'.repeat(Math.max(4, f.field_value.length)) : f.field_value,
           })),
         })),
       };
     },
-    [orders, connectionMode, currentUser]
+    [orders, currentUser]
   );
 
   const submitCustomerReview = useCallback(
@@ -1099,32 +1068,21 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       };
       setReviews((prev) => [newReview, ...prev]);
 
-      if (supabase && currentUser) {
-        await supabase.from('reviews').insert({
-          order_id: newReview.order_id,
-          user_id: currentUser.id,
-          customer_name: newReview.customer_name,
-          rating: newReview.rating,
-          sign_type_name: newReview.sign_type_name,
-          style_name: newReview.style_name,
-          comment: newReview.comment,
-          is_published: true,
-          is_demo: false,
-        });
+      if (isFirebaseConfigured && db) {
+        await setDoc(doc(db, 'reviews', newReview.id), newReview);
       }
     },
     [currentUser]
   );
 
-  // ============================================================================
-  // Admin CRUD Operations (All verify admin authorization & record Audit Logs)
-  // ============================================================================
+  // Admin authorization check
   const ensureAdminPermission = useCallback(() => {
     if (!isAdmin) {
       throw new Error('ไม่มีสิทธิ์เข้าถึงการจัดการระบบ: เฉพาะผู้ดูแลระบบ (Admin/Staff) เท่านั้น');
     }
   }, [isAdmin]);
 
+  // Admin CRUD
   const upsertCategoryGroup = useCallback(
     async (group: Partial<CategoryGroup> & { name: string; slug: string }) => {
       ensureAdminPermission();
@@ -1146,24 +1104,24 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         return exists ? prev.map((x) => (x.id === id ? record : x)) : [...prev, record];
       });
 
-      if (supabase && connectionMode === 'supabase_connected') {
-        await supabase.from('category_groups').upsert(record);
+      if (isFirebaseConfigured && db) {
+        await setDoc(doc(db, 'category_groups', id), record, { merge: true });
       }
       await appendAuditLog('UPSERT_CATEGORY_GROUP', 'category_groups', id, { name: record.name });
     },
-    [ensureAdminPermission, categoryGroups.length, connectionMode, appendAuditLog]
+    [ensureAdminPermission, categoryGroups.length, appendAuditLog]
   );
 
   const deleteCategoryGroup = useCallback(
     async (id: string) => {
       ensureAdminPermission();
       setCategoryGroups((prev) => prev.filter((x) => x.id !== id));
-      if (supabase && connectionMode === 'supabase_connected') {
-        await supabase.from('category_groups').delete().eq('id', id);
+      if (isFirebaseConfigured && db) {
+        await deleteDoc(doc(db, 'category_groups', id));
       }
       await appendAuditLog('DELETE_CATEGORY_GROUP', 'category_groups', id, {});
     },
-    [ensureAdminPermission, connectionMode, appendAuditLog]
+    [ensureAdminPermission, appendAuditLog]
   );
 
   const upsertSignCategory = useCallback(
@@ -1195,27 +1153,27 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         return exists ? prev.map((x) => (x.id === id ? record : x)) : [...prev, record];
       });
 
-      if (supabase && connectionMode === 'supabase_connected') {
-        await supabase.from('sign_categories').upsert(record);
+      if (isFirebaseConfigured && db) {
+        await setDoc(doc(db, 'sign_categories', id), record, { merge: true });
       }
       await appendAuditLog('UPSERT_SIGN_CATEGORY', 'sign_categories', id, {
         name: record.name,
         base_price: record.base_price,
       });
     },
-    [ensureAdminPermission, categoryGroups, signCategories.length, connectionMode, appendAuditLog]
+    [ensureAdminPermission, categoryGroups, signCategories.length, appendAuditLog]
   );
 
   const deleteSignCategory = useCallback(
     async (id: string) => {
       ensureAdminPermission();
       setSignCategories((prev) => prev.filter((x) => x.id !== id));
-      if (supabase && connectionMode === 'supabase_connected') {
-        await supabase.from('sign_categories').delete().eq('id', id);
+      if (isFirebaseConfigured && db) {
+        await deleteDoc(doc(db, 'sign_categories', id));
       }
       await appendAuditLog('DELETE_SIGN_CATEGORY', 'sign_categories', id, {});
     },
-    [ensureAdminPermission, connectionMode, appendAuditLog]
+    [ensureAdminPermission, appendAuditLog]
   );
 
   const upsertSignStyle = useCallback(
@@ -1243,15 +1201,15 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         return exists ? prev.map((x) => (x.id === id ? record : x)) : [...prev, record];
       });
 
-      if (supabase && connectionMode === 'supabase_connected') {
-        await supabase.from('sign_styles').upsert(record);
+      if (isFirebaseConfigured && db) {
+        await setDoc(doc(db, 'sign_styles', id), record, { merge: true });
       }
       await appendAuditLog('UPSERT_SIGN_STYLE', 'sign_styles', id, {
         code: record.code,
         price_modifier: record.price_modifier,
       });
     },
-    [ensureAdminPermission, signStyles.length, connectionMode, appendAuditLog]
+    [ensureAdminPermission, signStyles.length, appendAuditLog]
   );
 
   const upsertSignTemplate = useCallback(
@@ -1292,28 +1250,27 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         return exists ? prev.map((x) => (x.id === id ? record : x)) : [...prev, record];
       });
 
-      if (supabase && connectionMode === 'supabase_connected') {
-        await supabase.from('sign_templates').upsert(record);
+      if (isFirebaseConfigured && db) {
+        await setDoc(doc(db, 'sign_templates', id), record, { merge: true });
       }
       await appendAuditLog('UPSERT_SIGN_TEMPLATE', 'sign_templates', id, {
         code: record.code,
         name: record.name,
-        status: record.status,
       });
     },
-    [ensureAdminPermission, signTemplates.length, connectionMode, appendAuditLog]
+    [ensureAdminPermission, signTemplates.length, appendAuditLog]
   );
 
   const deleteSignTemplate = useCallback(
     async (id: string) => {
       ensureAdminPermission();
       setSignTemplates((prev) => prev.filter((x) => x.id !== id));
-      if (supabase && connectionMode === 'supabase_connected') {
-        await supabase.from('sign_templates').delete().eq('id', id);
+      if (isFirebaseConfigured && db) {
+        await deleteDoc(doc(db, 'sign_templates', id));
       }
       await appendAuditLog('DELETE_SIGN_TEMPLATE', 'sign_templates', id, {});
     },
-    [ensureAdminPermission, connectionMode, appendAuditLog]
+    [ensureAdminPermission, appendAuditLog]
   );
 
   const upsertDecorationColor = useCallback(
@@ -1337,24 +1294,24 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         return exists ? prev.map((x) => (x.id === id ? record : x)) : [...prev, record];
       });
 
-      if (supabase && connectionMode === 'supabase_connected') {
-        await supabase.from('decoration_colors').upsert(record);
+      if (isFirebaseConfigured && db) {
+        await setDoc(doc(db, 'decoration_colors', id), record, { merge: true });
       }
       await appendAuditLog('UPSERT_DECORATION_COLOR', 'decoration_colors', id, { name: record.name });
     },
-    [ensureAdminPermission, decorationColors.length, connectionMode, appendAuditLog]
+    [ensureAdminPermission, decorationColors.length, appendAuditLog]
   );
 
   const deleteDecorationColor = useCallback(
     async (id: string) => {
       ensureAdminPermission();
       setDecorationColors((prev) => prev.filter((x) => x.id !== id));
-      if (supabase && connectionMode === 'supabase_connected') {
-        await supabase.from('decoration_colors').delete().eq('id', id);
+      if (isFirebaseConfigured && db) {
+        await deleteDoc(doc(db, 'decoration_colors', id));
       }
       await appendAuditLog('DELETE_DECORATION_COLOR', 'decoration_colors', id, {});
     },
-    [ensureAdminPermission, connectionMode, appendAuditLog]
+    [ensureAdminPermission, appendAuditLog]
   );
 
   const upsertDecorationCategory = useCallback(
@@ -1380,27 +1337,26 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         return exists ? prev.map((x) => (x.id === id ? record : x)) : [...prev, record];
       });
 
-      if (supabase && connectionMode === 'supabase_connected') {
-        await supabase.from('decoration_categories').upsert(record);
+      if (isFirebaseConfigured && db) {
+        await setDoc(doc(db, 'decoration_categories', id), record, { merge: true });
       }
       await appendAuditLog('UPSERT_DECORATION_CATEGORY', 'decoration_categories', id, {
         name: record.name,
-        parent_id: record.parent_id,
       });
     },
-    [ensureAdminPermission, decorationCategories.length, connectionMode, appendAuditLog]
+    [ensureAdminPermission, decorationCategories.length, appendAuditLog]
   );
 
   const deleteDecorationCategory = useCallback(
     async (id: string) => {
       ensureAdminPermission();
       setDecorationCategories((prev) => prev.filter((x) => x.id !== id));
-      if (supabase && connectionMode === 'supabase_connected') {
-        await supabase.from('decoration_categories').delete().eq('id', id);
+      if (isFirebaseConfigured && db) {
+        await deleteDoc(doc(db, 'decoration_categories', id));
       }
       await appendAuditLog('DELETE_DECORATION_CATEGORY', 'decoration_categories', id, {});
     },
-    [ensureAdminPermission, connectionMode, appendAuditLog]
+    [ensureAdminPermission, appendAuditLog]
   );
 
   const upsertDecoration = useCallback(
@@ -1414,7 +1370,6 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     ) => {
       ensureAdminPermission();
       const id = dec.id ?? `dec-${Date.now()}`;
-      // Enforce strictly 0 THB and is_free = true per PART 9 & PART 16
       const record: DecorationItem = {
         id,
         code: dec.code.trim().toUpperCase(),
@@ -1435,28 +1390,27 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         return exists ? prev.map((x) => (x.id === id ? record : x)) : [...prev, record];
       });
 
-      if (supabase && connectionMode === 'supabase_connected') {
-        await supabase.from('decorations').upsert(record);
+      if (isFirebaseConfigured && db) {
+        await setDoc(doc(db, 'decorations', id), record, { merge: true });
       }
       await appendAuditLog('UPSERT_DECORATION', 'decorations', id, {
         code: record.code,
         name: record.name,
-        price: 0,
       });
     },
-    [ensureAdminPermission, decorations.length, connectionMode, appendAuditLog]
+    [ensureAdminPermission, decorations.length, appendAuditLog]
   );
 
   const deleteDecoration = useCallback(
     async (id: string) => {
       ensureAdminPermission();
       setDecorations((prev) => prev.filter((x) => x.id !== id));
-      if (supabase && connectionMode === 'supabase_connected') {
-        await supabase.from('decorations').delete().eq('id', id);
+      if (isFirebaseConfigured && db) {
+        await deleteDoc(doc(db, 'decorations', id));
       }
       await appendAuditLog('DELETE_DECORATION', 'decorations', id, {});
     },
-    [ensureAdminPermission, connectionMode, appendAuditLog]
+    [ensureAdminPermission, appendAuditLog]
   );
 
   const upsertProductField = useCallback(
@@ -1490,27 +1444,26 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         return exists ? prev.map((x) => (x.id === id ? record : x)) : [...prev, record];
       });
 
-      if (supabase && connectionMode === 'supabase_connected') {
-        await supabase.from('product_fields').upsert(record);
+      if (isFirebaseConfigured && db) {
+        await setDoc(doc(db, 'product_fields', id), record, { merge: true });
       }
       await appendAuditLog('UPSERT_PRODUCT_FIELD', 'product_fields', id, {
         label: record.label,
-        field_type: record.field_type,
       });
     },
-    [ensureAdminPermission, productFields.length, connectionMode, appendAuditLog]
+    [ensureAdminPermission, productFields.length, appendAuditLog]
   );
 
   const deleteProductField = useCallback(
     async (id: string) => {
       ensureAdminPermission();
       setProductFields((prev) => prev.filter((x) => x.id !== id));
-      if (supabase && connectionMode === 'supabase_connected') {
-        await supabase.from('product_fields').delete().eq('id', id);
+      if (isFirebaseConfigured && db) {
+        await deleteDoc(doc(db, 'product_fields', id));
       }
       await appendAuditLog('DELETE_PRODUCT_FIELD', 'product_fields', id, {});
     },
-    [ensureAdminPermission, connectionMode, appendAuditLog]
+    [ensureAdminPermission, appendAuditLog]
   );
 
   const updateOrderStatus = useCallback(
@@ -1533,26 +1486,6 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         created_at: nowIso,
       };
 
-      if (supabase && connectionMode === 'supabase_connected') {
-        const { error: updateError } = await supabase
-          .from('orders')
-          .update({
-            status,
-            ...(internalNote !== undefined ? { internal_note: internalNote } : {}),
-            ...(isPaid !== undefined ? { is_paid: isPaid } : {}),
-            updated_at: nowIso,
-          })
-          .eq('id', orderId);
-        if (updateError) {
-          throw new Error(`อัปเดตสถานะออเดอร์ไม่สำเร็จ: ${updateError.message}`);
-        }
-
-        const { error: historyError } = await supabase.from('order_status_history').insert(historyEntry);
-        if (historyError) {
-          throw new Error(`บันทึกประวัติสถานะไม่สำเร็จ: ${historyError.message}`);
-        }
-      }
-
       setOrders((prev) =>
         prev.map((o) => {
           if (o.id !== orderId) return o;
@@ -1567,13 +1500,27 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         })
       );
 
+      if (isFirebaseConfigured && db) {
+        const orderRef = doc(db, 'orders', orderId);
+        const snap = await getDoc(orderRef);
+        if (snap.exists()) {
+          const currentData = snap.data() as OrderRecord;
+          await updateDoc(orderRef, {
+            status,
+            ...(internalNote !== undefined ? { internal_note: internalNote } : {}),
+            ...(isPaid !== undefined ? { is_paid: isPaid } : {}),
+            updated_at: nowIso,
+            history: [...(currentData.history || []), historyEntry],
+          });
+        }
+      }
+
       await appendAuditLog('UPDATE_ORDER_STATUS', 'orders', orderId, {
         status,
         note,
-        is_paid: isPaid,
       });
     },
-    [ensureAdminPermission, currentUser, connectionMode, appendAuditLog]
+    [ensureAdminPermission, currentUser, appendAuditLog]
   );
 
   const upsertPromotion = useCallback(
@@ -1603,24 +1550,24 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         return exists ? prev.map((x) => (x.id === id ? record : x)) : [record, ...prev];
       });
 
-      if (supabase && connectionMode === 'supabase_connected') {
-        await supabase.from('promotions').upsert(record);
+      if (isFirebaseConfigured && db) {
+        await setDoc(doc(db, 'promotions', id), record, { merge: true });
       }
       await appendAuditLog('UPSERT_PROMOTION', 'promotions', id, { code: record.code });
     },
-    [ensureAdminPermission, connectionMode, appendAuditLog]
+    [ensureAdminPermission, appendAuditLog]
   );
 
   const deletePromotion = useCallback(
     async (id: string) => {
       ensureAdminPermission();
       setPromotions((prev) => prev.filter((x) => x.id !== id));
-      if (supabase && connectionMode === 'supabase_connected') {
-        await supabase.from('promotions').delete().eq('id', id);
+      if (isFirebaseConfigured && db) {
+        await deleteDoc(doc(db, 'promotions', id));
       }
       await appendAuditLog('DELETE_PROMOTION', 'promotions', id, {});
     },
-    [ensureAdminPermission, connectionMode, appendAuditLog]
+    [ensureAdminPermission, appendAuditLog]
   );
 
   const toggleReviewPublished = useCallback(
@@ -1629,26 +1576,26 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setReviews((prev) =>
         prev.map((r) => (r.id === reviewId ? { ...r, is_published: isPublished } : r))
       );
-      if (supabase && connectionMode === 'supabase_connected') {
-        await supabase.from('reviews').update({ is_published: isPublished }).eq('id', reviewId);
+      if (isFirebaseConfigured && db) {
+        await updateDoc(doc(db, 'reviews', reviewId), { is_published: isPublished });
       }
       await appendAuditLog('TOGGLE_REVIEW_VISIBILITY', 'reviews', reviewId, {
         is_published: isPublished,
       });
     },
-    [ensureAdminPermission, connectionMode, appendAuditLog]
+    [ensureAdminPermission, appendAuditLog]
   );
 
   const deleteReview = useCallback(
     async (reviewId: string) => {
       ensureAdminPermission();
       setReviews((prev) => prev.filter((r) => r.id !== reviewId));
-      if (supabase && connectionMode === 'supabase_connected') {
-        await supabase.from('reviews').delete().eq('id', reviewId);
+      if (isFirebaseConfigured && db) {
+        await deleteDoc(doc(db, 'reviews', reviewId));
       }
       await appendAuditLog('DELETE_REVIEW', 'reviews', reviewId, {});
     },
-    [ensureAdminPermission, connectionMode, appendAuditLog]
+    [ensureAdminPermission, appendAuditLog]
   );
 
   const updateSiteSettingsKey = useCallback(
@@ -1659,20 +1606,20 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         [key]: value,
       }));
 
-      if (supabase && connectionMode === 'supabase_connected') {
-        await supabase.from('site_settings').upsert({
-          setting_key: key,
-          setting_group: key === 'branding' ? 'appearance' : 'content',
-          setting_value: value,
-          is_public: true,
-          is_demo: false,
-          updated_by: currentUser?.id ?? null,
-          updated_at: new Date().toISOString(),
-        });
+      if (isFirebaseConfigured && db) {
+        await setDoc(
+          doc(db, 'site_settings', String(key)),
+          {
+            setting_key: key,
+            setting_value: value,
+            updated_at: new Date().toISOString(),
+          },
+          { merge: true }
+        );
       }
       await appendAuditLog('UPDATE_SITE_SETTINGS', 'site_settings', String(key), {});
     },
-    [ensureAdminPermission, connectionMode, currentUser, appendAuditLog]
+    [ensureAdminPermission, appendAuditLog]
   );
 
   const updateUserRole = useCallback(
@@ -1690,31 +1637,28 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         ];
       });
 
-      if (supabase && connectionMode === 'supabase_connected') {
-        await supabase.from('user_roles').upsert({
-          user_id: userId,
-          role: newRole,
-          granted_by: currentUser?.id ?? null,
-          updated_at: new Date().toISOString(),
-        });
+      if (isFirebaseConfigured && db) {
+        await setDoc(
+          doc(db, 'user_roles', userId),
+          {
+            user_id: userId,
+            role: newRole,
+            updated_at: new Date().toISOString(),
+          },
+          { merge: true }
+        );
       }
       await appendAuditLog('UPDATE_USER_ROLE', 'user_roles', userId, { role: newRole });
     },
-    [ensureAdminPermission, connectionMode, currentUser, appendAuditLog]
+    [ensureAdminPermission, appendAuditLog]
   );
 
   const clearDemoRecords = useCallback(async () => {
     ensureAdminPermission();
     setOrders((prev) => prev.filter((o) => !o.is_demo));
     setReviews((prev) => prev.filter((r) => !r.is_demo));
-    if (supabase && connectionMode === 'supabase_connected') {
-      await Promise.all([
-        supabase.from('orders').delete().eq('is_demo', true),
-        supabase.from('reviews').delete().eq('is_demo', true),
-      ]);
-    }
     await appendAuditLog('CLEAR_DEMO_ORDERS_AND_REVIEWS', 'system', 'demo-cleanup', {});
-  }, [ensureAdminPermission, connectionMode, appendAuditLog]);
+  }, [ensureAdminPermission, appendAuditLog]);
 
   const restoreDemoRecords = useCallback(async () => {
     ensureAdminPermission();
@@ -1787,6 +1731,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         updateUserRole,
         clearDemoRecords,
         restoreDemoRecords,
+        seedFirebaseDatabase,
       }}
     >
       {children}

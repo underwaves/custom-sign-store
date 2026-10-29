@@ -1207,10 +1207,10 @@ export const AdminManageSiteSettingsPage: React.FC = () => {
         </p>
       </div>
 
-      {/* Supabase Connection Status Card */}
+      {/* Firebase / Database Connection Status Card */}
       <div
         className={`p-6 rounded-3xl border space-y-3 ${
-          connectionMode === 'supabase_connected'
+          connectionMode === 'firebase_connected' || connectionMode === 'supabase_connected'
             ? 'bg-emerald-50/70 border-emerald-200'
             : 'bg-amber-50/80 border-amber-200'
         }`}
@@ -1219,19 +1219,21 @@ export const AdminManageSiteSettingsPage: React.FC = () => {
           <div className="flex items-center gap-2.5">
             <Database
               className={`w-5 h-5 ${
-                connectionMode === 'supabase_connected' ? 'text-emerald-600' : 'text-amber-600'
+                connectionMode === 'firebase_connected' || connectionMode === 'supabase_connected'
+                  ? 'text-emerald-600'
+                  : 'text-amber-600'
               }`}
             />
             <h2 className="font-bold text-stone-800 text-base">
               สถานะฐานข้อมูล:{' '}
-              {connectionMode === 'supabase_connected'
-                ? 'เชื่อมต่อ Supabase PostgreSQL สำเร็จแล้ว (Production Live)'
+              {connectionMode === 'firebase_connected' || connectionMode === 'supabase_connected'
+                ? 'เชื่อมต่อ Google Firebase Firestore & Storage สำเร็จแล้ว (Production Live)'
                 : 'โหมดเริ่มต้นรอการตั้งค่า .env.local (Sandbox & Placeholder Mode)'}
             </h2>
           </div>
           <span
             className={`text-xs font-bold px-3 py-1 rounded-full ${
-              connectionMode === 'supabase_connected'
+              connectionMode === 'firebase_connected' || connectionMode === 'supabase_connected'
                 ? 'bg-emerald-600 text-white'
                 : 'bg-amber-500 text-white'
             }`}
@@ -1242,13 +1244,12 @@ export const AdminManageSiteSettingsPage: React.FC = () => {
         <p className="text-xs text-stone-700 leading-relaxed">{connectionMessage}</p>
         <div className="p-4 rounded-2xl bg-white/90 border border-stone-200/80 text-xs text-stone-600 space-y-1.5">
           <div className="font-bold text-stone-800">
-            ไฟล์ SQL Migration และ Seed Data ที่เตรียมไว้พร้อมรันใน Supabase SQL Editor:
+            โครงสร้างและข้อกำหนดความปลอดภัย Firebase:
           </div>
           <ul className="list-disc pl-5 space-y-1 font-mono text-[11px]">
-            <li>supabase/migrations/20261027000001_initial_schema.sql (20 ตาราง + Indexes + Constraints)</li>
-            <li>supabase/migrations/20261027000002_rls_and_storage.sql (Row Level Security + 4 Storage Buckets)</li>
-            <li>supabase/migrations/20261027000003_order_rpc.sql (Transactional Order RPC & Secure Tracking)</li>
-            <li>supabase/seed.sql (ข้อมูลเริ่มต้น 15 ประเภทป้าย, 2 สไตล์, 20 เทมเพลต, 30 ของตกแต่งฟรี)</li>
+            <li>firestore.rules (Firestore Security Rules พร้อมระบบสิทธิ์ super_admin / admin / customer)</li>
+            <li>storage.rules (Firebase Storage Rules สำหรับ 4 โฟลเดอร์: templates, decorations, site-assets, references)</li>
+            <li>รองรับ Auto-seed ข้อมูลเริ่มต้นอัตโนมัติเมื่อเชื่อมต่อ Firebase เป็นครั้งแรก</li>
           </ul>
         </div>
       </div>

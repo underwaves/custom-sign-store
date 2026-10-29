@@ -1,0 +1,36 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Helper function to check if user is admin
+    function isAdminOrStaff() {
+      return request.auth != null &&
+        firestore.get(/databases/(default)/documents/user_roles/$(request.auth.uid)).data.role in ['admin', 'staff', 'super_admin'];
+    }
+
+    // Public catalog assets (templates, decorations, site branding)
+    match /site-assets/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdminOrStaff();
+    }
+
+    match /sign-templates/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdminOrStaff();
+    }
+
+    match /decorations/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdminOrStaff();
+    }
+
+    // Customer reference images (uploaded during custom sign order)
+    match /customer-references/{allPaths=**} {
+      allow read: if true; // accessible via downloadURL for order review
+      allow create: if request.resource.size < 5 * 1024 * 1024
+                    && request.resource.contentType.matches('image/.*');
+      allow update, delete: if isAdminOrStaff();
+    }
+  }
+}

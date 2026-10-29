@@ -66,7 +66,7 @@ export const PublicLayout: React.FC = () => {
       <div className="demo-toolbar relative z-40 border-b px-3 py-1.5 text-xs sm:px-4 sm:py-2">
         <div className="demo-toolbar-inner mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            {connectionMode === 'supabase_connected' ? (
+            {connectionMode === 'supabase_connected' || connectionMode === 'firebase_connected' ? (
               <span className="demo-status inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-2.5 py-0.5 font-semibold text-emerald-800">
                 <CheckCircle2 className="h-3.5 w-3.5" /> เชื่อมต่อระบบร้านแล้ว
               </span>
@@ -522,7 +522,7 @@ export const PublicLayout: React.FC = () => {
                   to="/admin/site-settings"
                   className="inline-flex items-center gap-1.5 rounded-xl border border-[#EAD9CE] bg-brand-cream px-3 py-1.5 text-xs font-semibold text-brand-brown hover:border-brand-pink"
                 >
-                  <Database className="h-3.5 w-3.5 text-brand-pink-dark" /> ตั้งค่า Supabase &amp; ธีมสี
+                  <Database className="h-3.5 w-3.5 text-brand-pink-dark" /> ตั้งค่าระบบ &amp; ธีมสี
                 </Link>
               </div>
             </div>
