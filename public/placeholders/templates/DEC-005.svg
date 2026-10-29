@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 620" fill="none">
+      <rect width="500" height="620" rx="32" fill="#FFF2F6"/>
+      <circle cx="70" cy="80" r="45" fill="#FCE8A6" opacity="0.65"/>
+      <circle cx="435" cy="540" r="55" fill="#DCD2F5" opacity="0.65"/>
+      <rect x="32" y="32" width="436" height="556" rx="28" fill="#FFFFFF" stroke="#F7B7C8" stroke-width="4"/>
+      <rect x="48" y="48" width="404" height="524" rx="22" fill="none" stroke="#E58CA5" stroke-width="2" stroke-dasharray="10 6"/>
+      <rect x="70" y="72" width="120" height="34" rx="17" fill="#E58CA5"/>
+      <text x="130" y="94" text-anchor="middle" font-family="Prompt, sans-serif" font-size="13" font-weight="700" fill="#FFFFFF">🎀 DEC-005</text>
+      <text x="420" y="94" text-anchor="end" font-family="Prompt, sans-serif" font-size="12" font-weight="700" fill="#E58CA5">DECORATIVE ✨</text>
+      <text x="250" y="175" text-anchor="middle" font-family="Prompt, sans-serif" font-size="25" font-weight="700" fill="#5D473A">Lovely Star Review Frame</text>
+      <rect x="74" y="218" width="352" height="220" rx="24" fill="#FFF9F5" stroke="#F7B7C8" stroke-width="2.5"/>
+      <text x="250" y="285" text-anchor="middle" font-family="Prompt, sans-serif" font-size="17" font-weight="700" fill="#5D473A">✨ กรอบตกแต่ง + สติกเกอร์จัดเต็ม ✨</text>
+      <text x="250" y="322" text-anchor="middle" font-family="Prompt, sans-serif" font-size="14" fill="#8B7365">ประดับโบว์ ดอกไม้ หัวใจ ดาว ฟรีทุกชิ้น</text>
+      <text x="250" y="360" text-anchor="middle" font-family="Prompt, sans-serif" font-size="13" font-weight="600" fill="#E58CA5">FREE DECORATIONS 0 THB</text>
+      <rect x="115" y="480" width="270" height="48" rx="24" fill="#FDECEF"/>
+      <text x="250" y="509" text-anchor="middle" font-family="Prompt, sans-serif" font-size="13" font-weight="700" fill="#E58CA5">ตัวอย่างเทมเพลต DEC-005</text>
+    </svg>

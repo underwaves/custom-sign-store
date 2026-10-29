@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 620" fill="none">
+      <rect width="500" height="620" rx="32" fill="#FFF9F5"/>
+      <rect x="36" y="36" width="428" height="548" rx="24" fill="#FFFFFF" stroke="#E8D8CE" stroke-width="3"/>
+      <rect x="66" y="66" width="110" height="32" rx="16" fill="#FDECEF"/>
+      <text x="121" y="87" text-anchor="middle" font-family="Prompt, sans-serif" font-size="13" font-weight="700" fill="#E58CA5">MIN-010</text>
+      <text x="410" y="87" text-anchor="end" font-family="Prompt, sans-serif" font-size="12" font-weight="600" fill="#8B7365">MINIMAL</text>
+      <text x="250" y="175" text-anchor="middle" font-family="Prompt, sans-serif" font-size="26" font-weight="700" fill="#5D473A">Simple Thank You Note</text>
+      <line x1="170" y1="205" x2="330" y2="205" stroke="#F7B7C8" stroke-width="3" stroke-linecap="round"/>
+      <rect x="74" y="240" width="352" height="190" rx="20" fill="#FFF9F5" stroke="#EFE2D9" stroke-width="2"/>
+      <text x="250" y="305" text-anchor="middle" font-family="Prompt, sans-serif" font-size="16" font-weight="600" fill="#5D473A">พื้นที่จัดวางข้อมูลป้ายของคุณ</text>
+      <text x="250" y="340" text-anchor="middle" font-family="Prompt, sans-serif" font-size="14" fill="#8B7365">โทนมินิมอล สะอาดตา อ่านง่าย</text>
+      <text x="250" y="375" text-anchor="middle" font-family="Prompt, sans-serif" font-size="13" fill="#E58CA5">เลือกของตกแต่งเพิ่มได้ฟรี 0 บาท</text>
+      <rect x="130" y="480" width="240" height="46" rx="23" fill="#F4F1EE"/>
+      <text x="250" y="508" text-anchor="middle" font-family="Prompt, sans-serif" font-size="13" font-weight="600" fill="#5D473A">ตัวอย่างเทมเพลต MIN-010</text>
+    </svg>

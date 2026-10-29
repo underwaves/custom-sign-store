@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400" fill="none">
+    <rect width="600" height="400" rx="28" fill="#FFF9F5"/>
+    <rect x="50" y="40" width="500" height="320" rx="24" fill="#FFFFFF" stroke="#EAD9CE" stroke-width="3"/>
+    <rect x="85" y="72" width="120" height="32" rx="16" fill="#FDECEF"/>
+    <text x="145" y="93" text-anchor="middle" font-family="Prompt, sans-serif" font-size="13" font-weight="600" fill="#E58CA5">MINIMAL STYLE</text>
+    <text x="300" y="155" text-anchor="middle" font-family="Prompt, sans-serif" font-size="28" font-weight="700" fill="#5D473A">เรียบง่าย สะอาดตา</text>
+    <text x="300" y="192" text-anchor="middle" font-family="Prompt, sans-serif" font-size="16" fill="#8B7365">ใช้โทนสีพาสเทลสบายตา มีพื้นที่ว่าง เน้นข้อความชัดเจน</text>
+    <rect x="150" y="230" width="300" height="72" rx="18" fill="#FFF9F5" stroke="#EAD9CE" stroke-width="2"/>
+    <text x="300" y="272" text-anchor="middle" font-family="Prompt, sans-serif" font-size="16" font-weight="600" fill="#5D473A">ราคาเพิ่ม +0 บาท (รวมในราคาฐาน)</text>
+  </svg>

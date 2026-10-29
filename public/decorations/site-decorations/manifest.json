@@ -1,0 +1,866 @@
+[
+  {
+    "id": "sparkle_1",
+    "category": "sparkles",
+    "filename": "sparkle-01.png",
+    "path": "/decorations/site-decorations/sparkles/sparkle-01.png",
+    "width": 627,
+    "height": 480,
+    "pixelCount": 204905
+  },
+  {
+    "id": "sparkle_2",
+    "category": "sparkles",
+    "filename": "sparkle-02.png",
+    "path": "/decorations/site-decorations/sparkles/sparkle-02.png",
+    "width": 219,
+    "height": 153,
+    "pixelCount": 15331
+  },
+  {
+    "id": "sparkle_3",
+    "category": "sparkles",
+    "filename": "sparkle-03.png",
+    "path": "/decorations/site-decorations/sparkles/sparkle-03.png",
+    "width": 211,
+    "height": 190,
+    "pixelCount": 27923
+  },
+  {
+    "id": "sparkle_4",
+    "category": "sparkles",
+    "filename": "sparkle-04.png",
+    "path": "/decorations/site-decorations/sparkles/sparkle-04.png",
+    "width": 376,
+    "height": 380,
+    "pixelCount": 105135
+  },
+  {
+    "id": "sparkle_5",
+    "category": "sparkles",
+    "filename": "sparkle-05.png",
+    "path": "/decorations/site-decorations/sparkles/sparkle-05.png",
+    "width": 415,
+    "height": 381,
+    "pixelCount": 125741
+  },
+  {
+    "id": "sparkle_6",
+    "category": "sparkles",
+    "filename": "sparkle-06.png",
+    "path": "/decorations/site-decorations/sparkles/sparkle-06.png",
+    "width": 492,
+    "height": 514,
+    "pixelCount": 179321
+  },
+  {
+    "id": "sparkle_7",
+    "category": "sparkles",
+    "filename": "sparkle-07.png",
+    "path": "/decorations/site-decorations/sparkles/sparkle-07.png",
+    "width": 543,
+    "height": 467,
+    "pixelCount": 186942
+  },
+  {
+    "id": "sparkle_8",
+    "category": "sparkles",
+    "filename": "sparkle-08.png",
+    "path": "/decorations/site-decorations/sparkles/sparkle-08.png",
+    "width": 399,
+    "height": 331,
+    "pixelCount": 93132
+  },
+  {
+    "id": "sparkle_9",
+    "category": "sparkles",
+    "filename": "sparkle-09.png",
+    "path": "/decorations/site-decorations/sparkles/sparkle-09.png",
+    "width": 420,
+    "height": 400,
+    "pixelCount": 129787
+  },
+  {
+    "id": "sparkle_10",
+    "category": "sparkles",
+    "filename": "sparkle-10.png",
+    "path": "/decorations/site-decorations/sparkles/sparkle-10.png",
+    "width": 362,
+    "height": 425,
+    "pixelCount": 124407
+  },
+  {
+    "id": "sparkle_11",
+    "category": "sparkles",
+    "filename": "sparkle-11.png",
+    "path": "/decorations/site-decorations/sparkles/sparkle-11.png",
+    "width": 447,
+    "height": 424,
+    "pixelCount": 137539
+  },
+  {
+    "id": "sweet_1",
+    "category": "characters_and_sweets",
+    "filename": "sweet-01.png",
+    "path": "/decorations/site-decorations/characters_and_sweets/sweet-01.png",
+    "width": 543,
+    "height": 309,
+    "pixelCount": 118846
+  },
+  {
+    "id": "sweet_2",
+    "category": "characters_and_sweets",
+    "filename": "sweet-02.png",
+    "path": "/decorations/site-decorations/characters_and_sweets/sweet-02.png",
+    "width": 105,
+    "height": 98,
+    "pixelCount": 5972
+  },
+  {
+    "id": "sweet_3",
+    "category": "characters_and_sweets",
+    "filename": "sweet-03.png",
+    "path": "/decorations/site-decorations/characters_and_sweets/sweet-03.png",
+    "width": 143,
+    "height": 124,
+    "pixelCount": 11788
+  },
+  {
+    "id": "sweet_4",
+    "category": "characters_and_sweets",
+    "filename": "sweet-04.png",
+    "path": "/decorations/site-decorations/characters_and_sweets/sweet-04.png",
+    "width": 120,
+    "height": 92,
+    "pixelCount": 7301
+  },
+  {
+    "id": "sweet_5",
+    "category": "characters_and_sweets",
+    "filename": "sweet-05.png",
+    "path": "/decorations/site-decorations/characters_and_sweets/sweet-05.png",
+    "width": 452,
+    "height": 323,
+    "pixelCount": 94263
+  },
+  {
+    "id": "sweet_6",
+    "category": "characters_and_sweets",
+    "filename": "sweet-06.png",
+    "path": "/decorations/site-decorations/characters_and_sweets/sweet-06.png",
+    "width": 475,
+    "height": 603,
+    "pixelCount": 229142
+  },
+  {
+    "id": "sweet_7",
+    "category": "characters_and_sweets",
+    "filename": "sweet-07.png",
+    "path": "/decorations/site-decorations/characters_and_sweets/sweet-07.png",
+    "width": 129,
+    "height": 94,
+    "pixelCount": 8162
+  },
+  {
+    "id": "sweet_8",
+    "category": "characters_and_sweets",
+    "filename": "sweet-08.png",
+    "path": "/decorations/site-decorations/characters_and_sweets/sweet-08.png",
+    "width": 154,
+    "height": 152,
+    "pixelCount": 14602
+  },
+  {
+    "id": "sweet_9",
+    "category": "characters_and_sweets",
+    "filename": "sweet-09.png",
+    "path": "/decorations/site-decorations/characters_and_sweets/sweet-09.png",
+    "width": 177,
+    "height": 130,
+    "pixelCount": 16355
+  },
+  {
+    "id": "sweet_10",
+    "category": "characters_and_sweets",
+    "filename": "sweet-10.png",
+    "path": "/decorations/site-decorations/characters_and_sweets/sweet-10.png",
+    "width": 129,
+    "height": 122,
+    "pixelCount": 9561
+  },
+  {
+    "id": "sweet_11",
+    "category": "characters_and_sweets",
+    "filename": "sweet-11.png",
+    "path": "/decorations/site-decorations/characters_and_sweets/sweet-11.png",
+    "width": 474,
+    "height": 300,
+    "pixelCount": 106708
+  },
+  {
+    "id": "sweet_12",
+    "category": "characters_and_sweets",
+    "filename": "sweet-12.png",
+    "path": "/decorations/site-decorations/characters_and_sweets/sweet-12.png",
+    "width": 500,
+    "height": 307,
+    "pixelCount": 109271
+  },
+  {
+    "id": "sweet_13",
+    "category": "characters_and_sweets",
+    "filename": "sweet-13.png",
+    "path": "/decorations/site-decorations/characters_and_sweets/sweet-13.png",
+    "width": 105,
+    "height": 98,
+    "pixelCount": 5972
+  },
+  {
+    "id": "sweet_14",
+    "category": "characters_and_sweets",
+    "filename": "sweet-14.png",
+    "path": "/decorations/site-decorations/characters_and_sweets/sweet-14.png",
+    "width": 143,
+    "height": 124,
+    "pixelCount": 11788
+  },
+  {
+    "id": "sweet_15",
+    "category": "characters_and_sweets",
+    "filename": "sweet-15.png",
+    "path": "/decorations/site-decorations/characters_and_sweets/sweet-15.png",
+    "width": 120,
+    "height": 92,
+    "pixelCount": 7301
+  },
+  {
+    "id": "frame_1",
+    "category": "frames_and_ribbons",
+    "filename": "frame-01.png",
+    "path": "/decorations/site-decorations/frames_and_ribbons/frame-01.png",
+    "width": 311,
+    "height": 305,
+    "pixelCount": 68184
+  },
+  {
+    "id": "frame_2",
+    "category": "frames_and_ribbons",
+    "filename": "frame-02.png",
+    "path": "/decorations/site-decorations/frames_and_ribbons/frame-02.png",
+    "width": 419,
+    "height": 394,
+    "pixelCount": 114441
+  },
+  {
+    "id": "frame_3",
+    "category": "frames_and_ribbons",
+    "filename": "frame-03.png",
+    "path": "/decorations/site-decorations/frames_and_ribbons/frame-03.png",
+    "width": 542,
+    "height": 301,
+    "pixelCount": 105698
+  },
+  {
+    "id": "frame_4",
+    "category": "frames_and_ribbons",
+    "filename": "frame-04.png",
+    "path": "/decorations/site-decorations/frames_and_ribbons/frame-04.png",
+    "width": 505,
+    "height": 458,
+    "pixelCount": 160579
+  },
+  {
+    "id": "frame_5",
+    "category": "frames_and_ribbons",
+    "filename": "frame-05.png",
+    "path": "/decorations/site-decorations/frames_and_ribbons/frame-05.png",
+    "width": 579,
+    "height": 481,
+    "pixelCount": 207525
+  },
+  {
+    "id": "frame_6",
+    "category": "frames_and_ribbons",
+    "filename": "frame-06.png",
+    "path": "/decorations/site-decorations/frames_and_ribbons/frame-06.png",
+    "width": 174,
+    "height": 130,
+    "pixelCount": 14476
+  },
+  {
+    "id": "frame_7",
+    "category": "frames_and_ribbons",
+    "filename": "frame-07.png",
+    "path": "/decorations/site-decorations/frames_and_ribbons/frame-07.png",
+    "width": 448,
+    "height": 695,
+    "pixelCount": 206452
+  },
+  {
+    "id": "frame_8",
+    "category": "frames_and_ribbons",
+    "filename": "frame-08.png",
+    "path": "/decorations/site-decorations/frames_and_ribbons/frame-08.png",
+    "width": 580,
+    "height": 505,
+    "pixelCount": 226912
+  },
+  {
+    "id": "sticker_1",
+    "category": "stickers",
+    "filename": "sticker-01.png",
+    "path": "/decorations/site-decorations/stickers/sticker-01.png",
+    "width": 1121,
+    "height": 1114,
+    "pixelCount": 849878
+  },
+  {
+    "id": "sticker_2",
+    "category": "stickers",
+    "filename": "sticker-02.png",
+    "path": "/decorations/site-decorations/stickers/sticker-02.png",
+    "width": 914,
+    "height": 570,
+    "pixelCount": 388445
+  },
+  {
+    "id": "sticker_3",
+    "category": "stickers",
+    "filename": "sticker-03.png",
+    "path": "/decorations/site-decorations/stickers/sticker-03.png",
+    "width": 927,
+    "height": 1221,
+    "pixelCount": 863063
+  },
+  {
+    "id": "sticker_4",
+    "category": "stickers",
+    "filename": "sticker-04.png",
+    "path": "/decorations/site-decorations/stickers/sticker-04.png",
+    "width": 928,
+    "height": 959,
+    "pixelCount": 638826
+  },
+  {
+    "id": "sticker_5",
+    "category": "stickers",
+    "filename": "sticker-05.png",
+    "path": "/decorations/site-decorations/stickers/sticker-05.png",
+    "width": 837,
+    "height": 938,
+    "pixelCount": 492286
+  },
+  {
+    "id": "sticker_6",
+    "category": "stickers",
+    "filename": "sticker-06.png",
+    "path": "/decorations/site-decorations/stickers/sticker-06.png",
+    "width": 897,
+    "height": 939,
+    "pixelCount": 588760
+  },
+  {
+    "id": "sticker_7",
+    "category": "stickers",
+    "filename": "sticker-07.png",
+    "path": "/decorations/site-decorations/stickers/sticker-07.png",
+    "width": 1043,
+    "height": 887,
+    "pixelCount": 636084
+  },
+  {
+    "id": "sticker_8",
+    "category": "stickers",
+    "filename": "sticker-08.png",
+    "path": "/decorations/site-decorations/stickers/sticker-08.png",
+    "width": 1223,
+    "height": 890,
+    "pixelCount": 673270
+  },
+  {
+    "id": "sticker_9",
+    "category": "stickers",
+    "filename": "sticker-09.png",
+    "path": "/decorations/site-decorations/stickers/sticker-09.png",
+    "width": 833,
+    "height": 660,
+    "pixelCount": 358162
+  },
+  {
+    "id": "sticker_10",
+    "category": "stickers",
+    "filename": "sticker-10.png",
+    "path": "/decorations/site-decorations/stickers/sticker-10.png",
+    "width": 822,
+    "height": 586,
+    "pixelCount": 326178
+  },
+  {
+    "id": "pudding_1",
+    "category": "bows_and_puddings",
+    "filename": "pudding-01.png",
+    "path": "/decorations/site-decorations/bows_and_puddings/pudding-01.png",
+    "width": 485,
+    "height": 491,
+    "pixelCount": 134699
+  },
+  {
+    "id": "pudding_2",
+    "category": "bows_and_puddings",
+    "filename": "pudding-02.png",
+    "path": "/decorations/site-decorations/bows_and_puddings/pudding-02.png",
+    "width": 113,
+    "height": 140,
+    "pixelCount": 4322
+  },
+  {
+    "id": "pudding_3",
+    "category": "bows_and_puddings",
+    "filename": "pudding-03.png",
+    "path": "/decorations/site-decorations/bows_and_puddings/pudding-03.png",
+    "width": 82,
+    "height": 76,
+    "pixelCount": 4117
+  },
+  {
+    "id": "pudding_4",
+    "category": "bows_and_puddings",
+    "filename": "pudding-04.png",
+    "path": "/decorations/site-decorations/bows_and_puddings/pudding-04.png",
+    "width": 608,
+    "height": 400,
+    "pixelCount": 155469
+  },
+  {
+    "id": "pudding_5",
+    "category": "bows_and_puddings",
+    "filename": "pudding-05.png",
+    "path": "/decorations/site-decorations/bows_and_puddings/pudding-05.png",
+    "width": 379,
+    "height": 570,
+    "pixelCount": 140317
+  },
+  {
+    "id": "pudding_6",
+    "category": "bows_and_puddings",
+    "filename": "pudding-06.png",
+    "path": "/decorations/site-decorations/bows_and_puddings/pudding-06.png",
+    "width": 46,
+    "height": 27,
+    "pixelCount": 682
+  },
+  {
+    "id": "pudding_7",
+    "category": "bows_and_puddings",
+    "filename": "pudding-07.png",
+    "path": "/decorations/site-decorations/bows_and_puddings/pudding-07.png",
+    "width": 31,
+    "height": 58,
+    "pixelCount": 927
+  },
+  {
+    "id": "pudding_8",
+    "category": "bows_and_puddings",
+    "filename": "pudding-08.png",
+    "path": "/decorations/site-decorations/bows_and_puddings/pudding-08.png",
+    "width": 31,
+    "height": 59,
+    "pixelCount": 918
+  },
+  {
+    "id": "pudding_9",
+    "category": "bows_and_puddings",
+    "filename": "pudding-09.png",
+    "path": "/decorations/site-decorations/bows_and_puddings/pudding-09.png",
+    "width": 45,
+    "height": 26,
+    "pixelCount": 667
+  },
+  {
+    "id": "pudding_10",
+    "category": "bows_and_puddings",
+    "filename": "pudding-10.png",
+    "path": "/decorations/site-decorations/bows_and_puddings/pudding-10.png",
+    "width": 629,
+    "height": 480,
+    "pixelCount": 195058
+  },
+  {
+    "id": "pudding_11",
+    "category": "bows_and_puddings",
+    "filename": "pudding-11.png",
+    "path": "/decorations/site-decorations/bows_and_puddings/pudding-11.png",
+    "width": 105,
+    "height": 159,
+    "pixelCount": 5915
+  },
+  {
+    "id": "pudding_12",
+    "category": "bows_and_puddings",
+    "filename": "pudding-12.png",
+    "path": "/decorations/site-decorations/bows_and_puddings/pudding-12.png",
+    "width": 50,
+    "height": 32,
+    "pixelCount": 757
+  },
+  {
+    "id": "pudding_13",
+    "category": "bows_and_puddings",
+    "filename": "pudding-13.png",
+    "path": "/decorations/site-decorations/bows_and_puddings/pudding-13.png",
+    "width": 34,
+    "height": 53,
+    "pixelCount": 826
+  },
+  {
+    "id": "pudding_14",
+    "category": "bows_and_puddings",
+    "filename": "pudding-14.png",
+    "path": "/decorations/site-decorations/bows_and_puddings/pudding-14.png",
+    "width": 367,
+    "height": 588,
+    "pixelCount": 131128
+  },
+  {
+    "id": "pudding_15",
+    "category": "bows_and_puddings",
+    "filename": "pudding-15.png",
+    "path": "/decorations/site-decorations/bows_and_puddings/pudding-15.png",
+    "width": 55,
+    "height": 30,
+    "pixelCount": 849
+  },
+  {
+    "id": "pudding_16",
+    "category": "bows_and_puddings",
+    "filename": "pudding-16.png",
+    "path": "/decorations/site-decorations/bows_and_puddings/pudding-16.png",
+    "width": 118,
+    "height": 142,
+    "pixelCount": 4228
+  },
+  {
+    "id": "pudding_17",
+    "category": "bows_and_puddings",
+    "filename": "pudding-17.png",
+    "path": "/decorations/site-decorations/bows_and_puddings/pudding-17.png",
+    "width": 35,
+    "height": 59,
+    "pixelCount": 953
+  },
+  {
+    "id": "pudding_18",
+    "category": "bows_and_puddings",
+    "filename": "pudding-18.png",
+    "path": "/decorations/site-decorations/bows_and_puddings/pudding-18.png",
+    "width": 433,
+    "height": 366,
+    "pixelCount": 95529
+  },
+  {
+    "id": "pudding_19",
+    "category": "bows_and_puddings",
+    "filename": "pudding-19.png",
+    "path": "/decorations/site-decorations/bows_and_puddings/pudding-19.png",
+    "width": 242,
+    "height": 237,
+    "pixelCount": 25011
+  },
+  {
+    "id": "pudding_20",
+    "category": "bows_and_puddings",
+    "filename": "pudding-20.png",
+    "path": "/decorations/site-decorations/bows_and_puddings/pudding-20.png",
+    "width": 88,
+    "height": 117,
+    "pixelCount": 3190
+  },
+  {
+    "id": "pudding_21",
+    "category": "bows_and_puddings",
+    "filename": "pudding-21.png",
+    "path": "/decorations/site-decorations/bows_and_puddings/pudding-21.png",
+    "width": 168,
+    "height": 132,
+    "pixelCount": 7179
+  },
+  {
+    "id": "pudding_22",
+    "category": "bows_and_puddings",
+    "filename": "pudding-22.png",
+    "path": "/decorations/site-decorations/bows_and_puddings/pudding-22.png",
+    "width": 85,
+    "height": 84,
+    "pixelCount": 4953
+  },
+  {
+    "id": "pudding_23",
+    "category": "bows_and_puddings",
+    "filename": "pudding-23.png",
+    "path": "/decorations/site-decorations/bows_and_puddings/pudding-23.png",
+    "width": 610,
+    "height": 454,
+    "pixelCount": 185464
+  },
+  {
+    "id": "pudding_24",
+    "category": "bows_and_puddings",
+    "filename": "pudding-24.png",
+    "path": "/decorations/site-decorations/bows_and_puddings/pudding-24.png",
+    "width": 143,
+    "height": 95,
+    "pixelCount": 8561
+  },
+  {
+    "id": "pudding_25",
+    "category": "bows_and_puddings",
+    "filename": "pudding-25.png",
+    "path": "/decorations/site-decorations/bows_and_puddings/pudding-25.png",
+    "width": 85,
+    "height": 79,
+    "pixelCount": 4551
+  },
+  {
+    "id": "accent_1",
+    "category": "stationery_and_accents",
+    "filename": "accent-01.png",
+    "path": "/decorations/site-decorations/stationery_and_accents/accent-01.png",
+    "width": 241,
+    "height": 222,
+    "pixelCount": 20899
+  },
+  {
+    "id": "accent_2",
+    "category": "stationery_and_accents",
+    "filename": "accent-02.png",
+    "path": "/decorations/site-decorations/stationery_and_accents/accent-02.png",
+    "width": 72,
+    "height": 71,
+    "pixelCount": 2713
+  },
+  {
+    "id": "accent_3",
+    "category": "stationery_and_accents",
+    "filename": "accent-03.png",
+    "path": "/decorations/site-decorations/stationery_and_accents/accent-03.png",
+    "width": 332,
+    "height": 284,
+    "pixelCount": 16612
+  },
+  {
+    "id": "accent_4",
+    "category": "stationery_and_accents",
+    "filename": "accent-04.png",
+    "path": "/decorations/site-decorations/stationery_and_accents/accent-04.png",
+    "width": 500,
+    "height": 410,
+    "pixelCount": 133436
+  },
+  {
+    "id": "accent_5",
+    "category": "stationery_and_accents",
+    "filename": "accent-05.png",
+    "path": "/decorations/site-decorations/stationery_and_accents/accent-05.png",
+    "width": 28,
+    "height": 53,
+    "pixelCount": 783
+  },
+  {
+    "id": "accent_6",
+    "category": "stationery_and_accents",
+    "filename": "accent-06.png",
+    "path": "/decorations/site-decorations/stationery_and_accents/accent-06.png",
+    "width": 580,
+    "height": 500,
+    "pixelCount": 177382
+  },
+  {
+    "id": "accent_7",
+    "category": "stationery_and_accents",
+    "filename": "accent-07.png",
+    "path": "/decorations/site-decorations/stationery_and_accents/accent-07.png",
+    "width": 39,
+    "height": 26,
+    "pixelCount": 513
+  },
+  {
+    "id": "accent_8",
+    "category": "stationery_and_accents",
+    "filename": "accent-08.png",
+    "path": "/decorations/site-decorations/stationery_and_accents/accent-08.png",
+    "width": 29,
+    "height": 60,
+    "pixelCount": 919
+  },
+  {
+    "id": "accent_9",
+    "category": "stationery_and_accents",
+    "filename": "accent-09.png",
+    "path": "/decorations/site-decorations/stationery_and_accents/accent-09.png",
+    "width": 26,
+    "height": 51,
+    "pixelCount": 708
+  },
+  {
+    "id": "accent_10",
+    "category": "stationery_and_accents",
+    "filename": "accent-10.png",
+    "path": "/decorations/site-decorations/stationery_and_accents/accent-10.png",
+    "width": 47,
+    "height": 26,
+    "pixelCount": 663
+  },
+  {
+    "id": "accent_11",
+    "category": "stationery_and_accents",
+    "filename": "accent-11.png",
+    "path": "/decorations/site-decorations/stationery_and_accents/accent-11.png",
+    "width": 529,
+    "height": 474,
+    "pixelCount": 168318
+  },
+  {
+    "id": "accent_12",
+    "category": "stationery_and_accents",
+    "filename": "accent-12.png",
+    "path": "/decorations/site-decorations/stationery_and_accents/accent-12.png",
+    "width": 57,
+    "height": 29,
+    "pixelCount": 854
+  },
+  {
+    "id": "accent_13",
+    "category": "stationery_and_accents",
+    "filename": "accent-13.png",
+    "path": "/decorations/site-decorations/stationery_and_accents/accent-13.png",
+    "width": 29,
+    "height": 61,
+    "pixelCount": 914
+  },
+  {
+    "id": "accent_14",
+    "category": "stationery_and_accents",
+    "filename": "accent-14.png",
+    "path": "/decorations/site-decorations/stationery_and_accents/accent-14.png",
+    "width": 43,
+    "height": 26,
+    "pixelCount": 595
+  },
+  {
+    "id": "accent_15",
+    "category": "stationery_and_accents",
+    "filename": "accent-15.png",
+    "path": "/decorations/site-decorations/stationery_and_accents/accent-15.png",
+    "width": 537,
+    "height": 537,
+    "pixelCount": 167365
+  },
+  {
+    "id": "accent_16",
+    "category": "stationery_and_accents",
+    "filename": "accent-16.png",
+    "path": "/decorations/site-decorations/stationery_and_accents/accent-16.png",
+    "width": 112,
+    "height": 149,
+    "pixelCount": 3996
+  },
+  {
+    "id": "accent_17",
+    "category": "stationery_and_accents",
+    "filename": "accent-17.png",
+    "path": "/decorations/site-decorations/stationery_and_accents/accent-17.png",
+    "width": 454,
+    "height": 705,
+    "pixelCount": 161456
+  },
+  {
+    "id": "accent_18",
+    "category": "stationery_and_accents",
+    "filename": "accent-18.png",
+    "path": "/decorations/site-decorations/stationery_and_accents/accent-18.png",
+    "width": 602,
+    "height": 487,
+    "pixelCount": 209542
+  },
+  {
+    "id": "accent_19",
+    "category": "stationery_and_accents",
+    "filename": "accent-19.png",
+    "path": "/decorations/site-decorations/stationery_and_accents/accent-19.png",
+    "width": 157,
+    "height": 155,
+    "pixelCount": 6812
+  },
+  {
+    "id": "accent_20",
+    "category": "stationery_and_accents",
+    "filename": "accent-20.png",
+    "path": "/decorations/site-decorations/stationery_and_accents/accent-20.png",
+    "width": 90,
+    "height": 90,
+    "pixelCount": 3849
+  },
+  {
+    "id": "accent_21",
+    "category": "stationery_and_accents",
+    "filename": "accent-21.png",
+    "path": "/decorations/site-decorations/stationery_and_accents/accent-21.png",
+    "width": 64,
+    "height": 59,
+    "pixelCount": 2089
+  },
+  {
+    "id": "accent_22",
+    "category": "stationery_and_accents",
+    "filename": "accent-22.png",
+    "path": "/decorations/site-decorations/stationery_and_accents/accent-22.png",
+    "width": 97,
+    "height": 260,
+    "pixelCount": 11040
+  },
+  {
+    "id": "accent_23",
+    "category": "stationery_and_accents",
+    "filename": "accent-23.png",
+    "path": "/decorations/site-decorations/stationery_and_accents/accent-23.png",
+    "width": 398,
+    "height": 332,
+    "pixelCount": 62105
+  },
+  {
+    "id": "accent_24",
+    "category": "stationery_and_accents",
+    "filename": "accent-24.png",
+    "path": "/decorations/site-decorations/stationery_and_accents/accent-24.png",
+    "width": 46,
+    "height": 27,
+    "pixelCount": 636
+  },
+  {
+    "id": "accent_25",
+    "category": "stationery_and_accents",
+    "filename": "accent-25.png",
+    "path": "/decorations/site-decorations/stationery_and_accents/accent-25.png",
+    "width": 28,
+    "height": 62,
+    "pixelCount": 941
+  },
+  {
+    "id": "accent_26",
+    "category": "stationery_and_accents",
+    "filename": "accent-26.png",
+    "path": "/decorations/site-decorations/stationery_and_accents/accent-26.png",
+    "width": 81,
+    "height": 88,
+    "pixelCount": 3454
+  },
+  {
+    "id": "accent_27",
+    "category": "stationery_and_accents",
+    "filename": "accent-27.png",
+    "path": "/decorations/site-decorations/stationery_and_accents/accent-27.png",
+    "width": 137,
+    "height": 115,
+    "pixelCount": 3943
+  }
+]

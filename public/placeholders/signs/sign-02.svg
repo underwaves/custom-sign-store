@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 340" fill="none">
+      <rect width="480" height="340" rx="26" fill="#FFF6E8"/>
+      <rect x="28" y="28" width="424" height="284" rx="22" fill="#FFFFFF" stroke="#D99B52" stroke-opacity="0.35" stroke-width="3"/>
+      <rect x="165" y="54" width="150" height="30" rx="15" fill="#FFF6E8"/>
+      <text x="240" y="74" text-anchor="middle" font-family="Prompt, sans-serif" font-size="12" font-weight="600" fill="#D99B52">SHOP DETAILS</text>
+      <text x="240" y="140" text-anchor="middle" font-family="Prompt, sans-serif" font-size="26" font-weight="700" fill="#5D473A">ป้ายรายละเอียดร้าน</text>
+      <rect x="80" y="170" width="320" height="58" rx="14" fill="#FFF9F5" stroke="#EAD9CE" stroke-width="1.5"/>
+      <text x="240" y="204" text-anchor="middle" font-family="Prompt, sans-serif" font-size="13" fill="#8B7365">ตัวอย่างป้ายสำเร็จรูป (แก้ไขข้อความได้)</text>
+      <text x="240" y="274" text-anchor="middle" font-family="Prompt, sans-serif" font-size="12" font-weight="600" fill="#D99B52">Custom Sign Studio • Placeholder #02</text>
+    </svg>

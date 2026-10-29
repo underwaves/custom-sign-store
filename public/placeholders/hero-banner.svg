@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 540" fill="none">
+    <rect width="800" height="540" rx="40" fill="#FFF9F5"/>
+    <circle cx="680" cy="110" r="95" fill="#FDECEF"/>
+    <circle cx="120" cy="430" r="110" fill="#F3ECFF"/>
+    <circle cx="420" cy="80" r="48" fill="#FFF2CC"/>
+    <!-- Sample Card 1: Minimal Sign -->
+    <g transform="translate(80, 75)">
+      <rect width="280" height="360" rx="28" fill="#FFFFFF" stroke="#EAD9CE" stroke-width="3"/>
+      <rect x="24" y="24" width="90" height="28" rx="14" fill="#FDECEF"/>
+      <text x="69" y="43" text-anchor="middle" font-family="Prompt, sans-serif" font-size="12" font-weight="600" fill="#E58CA5">MINIMAL</text>
+      <text x="140" y="95" text-anchor="middle" font-family="Prompt, sans-serif" font-size="22" font-weight="700" fill="#5D473A">PASTEL SHOP</text>
+      <text x="140" y="122" text-anchor="middle" font-family="Prompt, sans-serif" font-size="13" fill="#8B7365">ป้ายร้านค้า &amp; ป้ายบัญชีมินิมอล</text>
+      <rect x="34" y="150" width="212" height="68" rx="16" fill="#FFF9F5" stroke="#F2E6DF" stroke-width="2"/>
+      <text x="140" y="180" text-anchor="middle" font-family="Prompt, sans-serif" font-size="13" font-weight="600" fill="#5D473A">ธนาคารกสิกรไทย (KBank)</text>
+      <text x="140" y="203" text-anchor="middle" font-family="Prompt, sans-serif" font-size="16" font-weight="700" fill="#E58CA5">123-4-56789-0</text>
+      <rect x="34" y="240" width="212" height="44" rx="14" fill="#F4F9F6"/>
+      <text x="140" y="267" text-anchor="middle" font-family="Prompt, sans-serif" font-size="13" font-weight="600" fill="#4C7A63">OPEN DAILY 09:00 - 20:00</text>
+      <text x="140" y="325" text-anchor="middle" font-family="Prompt, sans-serif" font-size="12" fill="#8B7365">สะอาดตา • อ่านง่าย • มืออาชีพ</text>
+    </g>
+    <!-- Sample Card 2: Decorative Sign -->
+    <g transform="translate(410, 95)">
+      <rect width="310" height="370" rx="30" fill="#FFF5F8" stroke="#F7B7C8" stroke-width="4"/>
+      <rect x="14" y="14" width="282" height="342" rx="22" fill="#FFFFFF" stroke="#F7B7C8" stroke-width="2" stroke-dasharray="8 6"/>
+      <rect x="95" y="30" width="120" height="30" rx="15" fill="#F7B7C8"/>
+      <text x="155" y="50" text-anchor="middle" font-family="Prompt, sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">DECORATIVE ✨</text>
+      <text x="155" y="100" text-anchor="middle" font-family="Prompt, sans-serif" font-size="22" font-weight="700" fill="#5D473A">SWEETIE STUDIO</text>
+      <text x="155" y="128" text-anchor="middle" font-family="Prompt, sans-serif" font-size="13" fill="#E58CA5">🎀 เลือกของตกแต่งฟรี 0 บาททุกชิ้น!</text>
+      <g transform="translate(36, 152)">
+        <rect width="238" height="110" rx="18" fill="#FFF9F5" stroke="#F7B7C8" stroke-width="2"/>
+        <text x="119" y="34" text-anchor="middle" font-family="Prompt, sans-serif" font-size="14" font-weight="700" fill="#5D473A">เรทราคาแพ็กเกจยอดฮิต</text>
+        <text x="119" y="62" text-anchor="middle" font-family="Prompt, sans-serif" font-size="13" fill="#8B7365">เซ็ต S น่ารักกรุบกริบ • 59.-</text>
+        <text x="119" y="88" text-anchor="middle" font-family="Prompt, sans-serif" font-size="13" fill="#8B7365">เซ็ต M ตกแต่งจัดเต็ม • 79.-</text>
+      </g>
+      <rect x="52" y="286" width="206" height="42" rx="21" fill="#E58CA5"/>
+      <text x="155" y="312" text-anchor="middle" font-family="Prompt, sans-serif" font-size="13" font-weight="600" fill="#FFFFFF">ตัวอย่างผลงาน Placeholder</text>
+    </g>
+  </svg>

@@ -1,0 +1,570 @@
+[
+  {
+    "folder": "03",
+    "file": "03/Untitled1630_20241125091525.png",
+    "codePrefix": "DEC-PCH",
+    "categoryName": "โบว์และริบบิ้นพีชพาสเทล",
+    "categorySlug": "peach-ribbons",
+    "colorName": "พีชพาสเทล (Peach)",
+    "colorSlug": "peach",
+    "colorHex": "#E7A283",
+    "themeName": "เซ็ตพีชพาสเทล (Set 03)",
+    "items": [
+      {
+        "code": "DEC-PCH-01",
+        "name": "โบว์และริบบิ้นพีชพาสเทล แบบที่ 1",
+        "relativeUrl": "/decorations/real/03/DEC-PCH-01.png",
+        "width": 676,
+        "height": 532
+      },
+      {
+        "code": "DEC-PCH-02",
+        "name": "โบว์และริบบิ้นพีชพาสเทล แบบที่ 2",
+        "relativeUrl": "/decorations/real/03/DEC-PCH-02.png",
+        "width": 272,
+        "height": 204
+      },
+      {
+        "code": "DEC-PCH-03",
+        "name": "โบว์และริบบิ้นพีชพาสเทล แบบที่ 3",
+        "relativeUrl": "/decorations/real/03/DEC-PCH-03.png",
+        "width": 264,
+        "height": 244
+      },
+      {
+        "code": "DEC-PCH-04",
+        "name": "โบว์และริบบิ้นพีชพาสเทล แบบที่ 4",
+        "relativeUrl": "/decorations/real/03/DEC-PCH-04.png",
+        "width": 468,
+        "height": 432
+      },
+      {
+        "code": "DEC-PCH-05",
+        "name": "โบว์และริบบิ้นพีชพาสเทล แบบที่ 5",
+        "relativeUrl": "/decorations/real/03/DEC-PCH-05.png",
+        "width": 428,
+        "height": 432
+      },
+      {
+        "code": "DEC-PCH-06",
+        "name": "โบว์และริบบิ้นพีชพาสเทล แบบที่ 6",
+        "relativeUrl": "/decorations/real/03/DEC-PCH-06.png",
+        "width": 544,
+        "height": 568
+      },
+      {
+        "code": "DEC-PCH-07",
+        "name": "โบว์และริบบิ้นพีชพาสเทล แบบที่ 7",
+        "relativeUrl": "/decorations/real/03/DEC-PCH-07.png",
+        "width": 452,
+        "height": 384
+      },
+      {
+        "code": "DEC-PCH-08",
+        "name": "โบว์และริบบิ้นพีชพาสเทล แบบที่ 8",
+        "relativeUrl": "/decorations/real/03/DEC-PCH-08.png",
+        "width": 596,
+        "height": 520
+      },
+      {
+        "code": "DEC-PCH-09",
+        "name": "โบว์และริบบิ้นพีชพาสเทล แบบที่ 9",
+        "relativeUrl": "/decorations/real/03/DEC-PCH-09.png",
+        "width": 472,
+        "height": 452
+      },
+      {
+        "code": "DEC-PCH-10",
+        "name": "โบว์และริบบิ้นพีชพาสเทล แบบที่ 10",
+        "relativeUrl": "/decorations/real/03/DEC-PCH-10.png",
+        "width": 416,
+        "height": 476
+      },
+      {
+        "code": "DEC-PCH-11",
+        "name": "โบว์และริบบิ้นพีชพาสเทล แบบที่ 11",
+        "relativeUrl": "/decorations/real/03/DEC-PCH-11.png",
+        "width": 500,
+        "height": 476
+      }
+    ]
+  },
+  {
+    "folder": "05",
+    "file": "05/Untitled1619_0000-12-40_20241125161106.png",
+    "codePrefix": "DEC-CRM",
+    "categoryName": "ของตกแต่งครีมอบอุ่น",
+    "categorySlug": "warm-cream",
+    "colorName": "ครีมอบอุ่น (Warm Cream)",
+    "colorSlug": "cream-warm",
+    "colorHex": "#D4AB94",
+    "themeName": "เซ็ตครีมอบอุ่น (Set 05)",
+    "items": [
+      {
+        "code": "DEC-CRM-01",
+        "name": "ของตกแต่งครีมอบอุ่น แบบที่ 1",
+        "relativeUrl": "/decorations/real/05/DEC-CRM-01.png",
+        "width": 160,
+        "height": 148
+      },
+      {
+        "code": "DEC-CRM-02",
+        "name": "ของตกแต่งครีมอบอุ่น แบบที่ 2",
+        "relativeUrl": "/decorations/real/05/DEC-CRM-02.png",
+        "width": 300,
+        "height": 192
+      },
+      {
+        "code": "DEC-CRM-03",
+        "name": "ของตกแต่งครีมอบอุ่น แบบที่ 3",
+        "relativeUrl": "/decorations/real/05/DEC-CRM-03.png",
+        "width": 1484,
+        "height": 864
+      },
+      {
+        "code": "DEC-CRM-04",
+        "name": "ของตกแต่งครีมอบอุ่น แบบที่ 4",
+        "relativeUrl": "/decorations/real/05/DEC-CRM-04.png",
+        "width": 176,
+        "height": 144
+      },
+      {
+        "code": "DEC-CRM-05",
+        "name": "ของตกแต่งครีมอบอุ่น แบบที่ 5",
+        "relativeUrl": "/decorations/real/05/DEC-CRM-05.png",
+        "width": 232,
+        "height": 184
+      },
+      {
+        "code": "DEC-CRM-06",
+        "name": "ของตกแต่งครีมอบอุ่น แบบที่ 6",
+        "relativeUrl": "/decorations/real/05/DEC-CRM-06.png",
+        "width": 708,
+        "height": 396
+      },
+      {
+        "code": "DEC-CRM-07",
+        "name": "ของตกแต่งครีมอบอุ่น แบบที่ 7",
+        "relativeUrl": "/decorations/real/05/DEC-CRM-07.png",
+        "width": 336,
+        "height": 220
+      }
+    ]
+  },
+  {
+    "folder": "06",
+    "file": "06/Untitled1632_20241125155449.png",
+    "codePrefix": "DEC-BRN",
+    "categoryName": "ไอคอนและป้ายร้านอบอุ่น",
+    "categorySlug": "cozy-icons",
+    "colorName": "น้ำตาลซินนามอน (Cinnamon)",
+    "colorSlug": "cinnamon-brown",
+    "colorHex": "#D88A62",
+    "themeName": "เซ็ตซินนามอนอบอุ่น (Set 06)",
+    "items": [
+      {
+        "code": "DEC-BRN-01",
+        "name": "ไอคอนและป้ายร้านอบอุ่น แบบที่ 1",
+        "relativeUrl": "/decorations/real/06/DEC-BRN-01.png",
+        "width": 364,
+        "height": 360
+      },
+      {
+        "code": "DEC-BRN-02",
+        "name": "ไอคอนและป้ายร้านอบอุ่น แบบที่ 2",
+        "relativeUrl": "/decorations/real/06/DEC-BRN-02.png",
+        "width": 472,
+        "height": 444
+      },
+      {
+        "code": "DEC-BRN-03",
+        "name": "ไอคอนและป้ายร้านอบอุ่น แบบที่ 3",
+        "relativeUrl": "/decorations/real/06/DEC-BRN-03.png",
+        "width": 596,
+        "height": 356
+      },
+      {
+        "code": "DEC-BRN-04",
+        "name": "ไอคอนและป้ายร้านอบอุ่น แบบที่ 4",
+        "relativeUrl": "/decorations/real/06/DEC-BRN-04.png",
+        "width": 556,
+        "height": 512
+      },
+      {
+        "code": "DEC-BRN-05",
+        "name": "ไอคอนและป้ายร้านอบอุ่น แบบที่ 5",
+        "relativeUrl": "/decorations/real/06/DEC-BRN-05.png",
+        "width": 632,
+        "height": 536
+      },
+      {
+        "code": "DEC-BRN-06",
+        "name": "ไอคอนและป้ายร้านอบอุ่น แบบที่ 6",
+        "relativeUrl": "/decorations/real/06/DEC-BRN-06.png",
+        "width": 528,
+        "height": 884
+      },
+      {
+        "code": "DEC-BRN-07",
+        "name": "ไอคอนและป้ายร้านอบอุ่น แบบที่ 7",
+        "relativeUrl": "/decorations/real/06/DEC-BRN-07.png",
+        "width": 632,
+        "height": 560
+      }
+    ]
+  },
+  {
+    "folder": "07",
+    "file": "07/Untitled1634_20241125172123.png",
+    "codePrefix": "DEC-ROS",
+    "categoryName": "กรอบและริบบิ้นคอรัลโรส",
+    "categorySlug": "coral-rose",
+    "colorName": "คอรัลโรส (Coral Rose)",
+    "colorSlug": "coral-rose",
+    "colorHex": "#E09988",
+    "themeName": "เซ็ตคอรัลโรส (Set 07)",
+    "items": [
+      {
+        "code": "DEC-ROS-01",
+        "name": "กรอบและริบบิ้นคอรัลโรส แบบที่ 1",
+        "relativeUrl": "/decorations/real/07/DEC-ROS-01.png",
+        "width": 1172,
+        "height": 1168
+      },
+      {
+        "code": "DEC-ROS-02",
+        "name": "กรอบและริบบิ้นคอรัลโรส แบบที่ 2",
+        "relativeUrl": "/decorations/real/07/DEC-ROS-02.png",
+        "width": 968,
+        "height": 620
+      },
+      {
+        "code": "DEC-ROS-03",
+        "name": "กรอบและริบบิ้นคอรัลโรส แบบที่ 3",
+        "relativeUrl": "/decorations/real/07/DEC-ROS-03.png",
+        "width": 976,
+        "height": 1272
+      },
+      {
+        "code": "DEC-ROS-04",
+        "name": "กรอบและริบบิ้นคอรัลโรส แบบที่ 4",
+        "relativeUrl": "/decorations/real/07/DEC-ROS-04.png",
+        "width": 980,
+        "height": 1012
+      },
+      {
+        "code": "DEC-ROS-05",
+        "name": "กรอบและริบบิ้นคอรัลโรส แบบที่ 5",
+        "relativeUrl": "/decorations/real/07/DEC-ROS-05.png",
+        "width": 888,
+        "height": 988
+      },
+      {
+        "code": "DEC-ROS-06",
+        "name": "กรอบและริบบิ้นคอรัลโรส แบบที่ 6",
+        "relativeUrl": "/decorations/real/07/DEC-ROS-06.png",
+        "width": 948,
+        "height": 992
+      },
+      {
+        "code": "DEC-ROS-07",
+        "name": "กรอบและริบบิ้นคอรัลโรส แบบที่ 7",
+        "relativeUrl": "/decorations/real/07/DEC-ROS-07.png",
+        "width": 1096,
+        "height": 940
+      },
+      {
+        "code": "DEC-ROS-08",
+        "name": "กรอบและริบบิ้นคอรัลโรส แบบที่ 8",
+        "relativeUrl": "/decorations/real/07/DEC-ROS-08.png",
+        "width": 1276,
+        "height": 944
+      },
+      {
+        "code": "DEC-ROS-09",
+        "name": "กรอบและริบบิ้นคอรัลโรส แบบที่ 9",
+        "relativeUrl": "/decorations/real/07/DEC-ROS-09.png",
+        "width": 884,
+        "height": 712
+      },
+      {
+        "code": "DEC-ROS-10",
+        "name": "กรอบและริบบิ้นคอรัลโรส แบบที่ 10",
+        "relativeUrl": "/decorations/real/07/DEC-ROS-10.png",
+        "width": 872,
+        "height": 640
+      }
+    ]
+  },
+  {
+    "folder": "13",
+    "file": "13/Untitled1704_20250119083533.png",
+    "codePrefix": "DEC-MVE",
+    "categoryName": "มาสคอตและหัวใจมอฟ",
+    "categorySlug": "mauve-hearts",
+    "colorName": "มอฟพาสเทล (Dusty Mauve)",
+    "colorSlug": "dusty-mauve",
+    "colorHex": "#CC8D81",
+    "themeName": "เซ็ตมอฟพาสเทล (Set 13)",
+    "items": [
+      {
+        "code": "DEC-MVE-01",
+        "name": "มาสคอตและหัวใจมอฟ แบบที่ 1",
+        "relativeUrl": "/decorations/real/13/DEC-MVE-01.png",
+        "width": 540,
+        "height": 544
+      },
+      {
+        "code": "DEC-MVE-02",
+        "name": "มาสคอตและหัวใจมอฟ แบบที่ 2",
+        "relativeUrl": "/decorations/real/13/DEC-MVE-02.png",
+        "width": 164,
+        "height": 192
+      },
+      {
+        "code": "DEC-MVE-03",
+        "name": "มาสคอตและหัวใจมอฟ แบบที่ 3",
+        "relativeUrl": "/decorations/real/13/DEC-MVE-03.png",
+        "width": 660,
+        "height": 452
+      },
+      {
+        "code": "DEC-MVE-04",
+        "name": "มาสคอตและหัวใจมอฟ แบบที่ 4",
+        "relativeUrl": "/decorations/real/13/DEC-MVE-04.png",
+        "width": 1120,
+        "height": 856
+      },
+      {
+        "code": "DEC-MVE-05",
+        "name": "มาสคอตและหัวใจมอฟ แบบที่ 5",
+        "relativeUrl": "/decorations/real/13/DEC-MVE-05.png",
+        "width": 132,
+        "height": 128
+      },
+      {
+        "code": "DEC-MVE-06",
+        "name": "มาสคอตและหัวใจมอฟ แบบที่ 6",
+        "relativeUrl": "/decorations/real/13/DEC-MVE-06.png",
+        "width": 160,
+        "height": 184
+      },
+      {
+        "code": "DEC-MVE-07",
+        "name": "มาสคอตและหัวใจมอฟ แบบที่ 7",
+        "relativeUrl": "/decorations/real/13/DEC-MVE-07.png",
+        "width": 172,
+        "height": 184
+      },
+      {
+        "code": "DEC-MVE-08",
+        "name": "มาสคอตและหัวใจมอฟ แบบที่ 8",
+        "relativeUrl": "/decorations/real/13/DEC-MVE-08.png",
+        "width": 420,
+        "height": 644
+      },
+      {
+        "code": "DEC-MVE-09",
+        "name": "มาสคอตและหัวใจมอฟ แบบที่ 9",
+        "relativeUrl": "/decorations/real/13/DEC-MVE-09.png",
+        "width": 548,
+        "height": 540
+      },
+      {
+        "code": "DEC-MVE-10",
+        "name": "มาสคอตและหัวใจมอฟ แบบที่ 10",
+        "relativeUrl": "/decorations/real/13/DEC-MVE-10.png",
+        "width": 168,
+        "height": 192
+      },
+      {
+        "code": "DEC-MVE-11",
+        "name": "มาสคอตและหัวใจมอฟ แบบที่ 11",
+        "relativeUrl": "/decorations/real/13/DEC-MVE-11.png",
+        "width": 140,
+        "height": 140
+      },
+      {
+        "code": "DEC-MVE-12",
+        "name": "มาสคอตและหัวใจมอฟ แบบที่ 12",
+        "relativeUrl": "/decorations/real/13/DEC-MVE-12.png",
+        "width": 660,
+        "height": 508
+      },
+      {
+        "code": "DEC-MVE-13",
+        "name": "มาสคอตและหัวใจมอฟ แบบที่ 13",
+        "relativeUrl": "/decorations/real/13/DEC-MVE-13.png",
+        "width": 144,
+        "height": 172
+      },
+      {
+        "code": "DEC-MVE-14",
+        "name": "มาสคอตและหัวใจมอฟ แบบที่ 14",
+        "relativeUrl": "/decorations/real/13/DEC-MVE-14.png",
+        "width": 220,
+        "height": 184
+      },
+      {
+        "code": "DEC-MVE-15",
+        "name": "มาสคอตและหัวใจมอฟ แบบที่ 15",
+        "relativeUrl": "/decorations/real/13/DEC-MVE-15.png",
+        "width": 136,
+        "height": 132
+      }
+    ]
+  },
+  {
+    "folder": "15",
+    "file": "15/Untitled1735_20250119083458.png",
+    "codePrefix": "DEC-PNK",
+    "categoryName": "สติกเกอร์และดอกไม้ชมพูหวาน",
+    "categorySlug": "sweet-blossom",
+    "colorName": "ชมพูบลอสซัม (Sweet Blossom)",
+    "colorSlug": "sweet-blossom",
+    "colorHex": "#E5BCC1",
+    "themeName": "เซ็ตชมพูบลอสซัม (Set 15)",
+    "items": [
+      {
+        "code": "DEC-PNK-01",
+        "name": "สติกเกอร์และดอกไม้ชมพูหวาน แบบที่ 1",
+        "relativeUrl": "/decorations/real/15/DEC-PNK-01.png",
+        "width": 124,
+        "height": 120
+      },
+      {
+        "code": "DEC-PNK-02",
+        "name": "สติกเกอร์และดอกไม้ชมพูหวาน แบบที่ 2",
+        "relativeUrl": "/decorations/real/15/DEC-PNK-02.png",
+        "width": 384,
+        "height": 336
+      },
+      {
+        "code": "DEC-PNK-03",
+        "name": "สติกเกอร์และดอกไม้ชมพูหวาน แบบที่ 3",
+        "relativeUrl": "/decorations/real/15/DEC-PNK-03.png",
+        "width": 296,
+        "height": 276
+      },
+      {
+        "code": "DEC-PNK-04",
+        "name": "สติกเกอร์และดอกไม้ชมพูหวาน แบบที่ 4",
+        "relativeUrl": "/decorations/real/15/DEC-PNK-04.png",
+        "width": 636,
+        "height": 552
+      },
+      {
+        "code": "DEC-PNK-05",
+        "name": "สติกเกอร์และดอกไม้ชมพูหวาน แบบที่ 5",
+        "relativeUrl": "/decorations/real/15/DEC-PNK-05.png",
+        "width": 168,
+        "height": 200
+      },
+      {
+        "code": "DEC-PNK-06",
+        "name": "สติกเกอร์และดอกไม้ชมพูหวาน แบบที่ 6",
+        "relativeUrl": "/decorations/real/15/DEC-PNK-06.png",
+        "width": 552,
+        "height": 464
+      },
+      {
+        "code": "DEC-PNK-07",
+        "name": "สติกเกอร์และดอกไม้ชมพูหวาน แบบที่ 7",
+        "relativeUrl": "/decorations/real/15/DEC-PNK-07.png",
+        "width": 176,
+        "height": 192
+      },
+      {
+        "code": "DEC-PNK-08",
+        "name": "สติกเกอร์และดอกไม้ชมพูหวาน แบบที่ 8",
+        "relativeUrl": "/decorations/real/15/DEC-PNK-08.png",
+        "width": 580,
+        "height": 528
+      },
+      {
+        "code": "DEC-PNK-09",
+        "name": "สติกเกอร์และดอกไม้ชมพูหวาน แบบที่ 9",
+        "relativeUrl": "/decorations/real/15/DEC-PNK-09.png",
+        "width": 588,
+        "height": 588
+      },
+      {
+        "code": "DEC-PNK-10",
+        "name": "สติกเกอร์และดอกไม้ชมพูหวาน แบบที่ 10",
+        "relativeUrl": "/decorations/real/15/DEC-PNK-10.png",
+        "width": 164,
+        "height": 200
+      },
+      {
+        "code": "DEC-PNK-11",
+        "name": "สติกเกอร์และดอกไม้ชมพูหวาน แบบที่ 11",
+        "relativeUrl": "/decorations/real/15/DEC-PNK-11.png",
+        "width": 212,
+        "height": 208
+      },
+      {
+        "code": "DEC-PNK-12",
+        "name": "สติกเกอร์และดอกไม้ชมพูหวาน แบบที่ 12",
+        "relativeUrl": "/decorations/real/15/DEC-PNK-12.png",
+        "width": 140,
+        "height": 144
+      },
+      {
+        "code": "DEC-PNK-13",
+        "name": "สติกเกอร์และดอกไม้ชมพูหวาน แบบที่ 13",
+        "relativeUrl": "/decorations/real/15/DEC-PNK-13.png",
+        "width": 504,
+        "height": 756
+      },
+      {
+        "code": "DEC-PNK-14",
+        "name": "สติกเกอร์และดอกไม้ชมพูหวาน แบบที่ 14",
+        "relativeUrl": "/decorations/real/15/DEC-PNK-14.png",
+        "width": 652,
+        "height": 540
+      },
+      {
+        "code": "DEC-PNK-15",
+        "name": "สติกเกอร์และดอกไม้ชมพูหวาน แบบที่ 15",
+        "relativeUrl": "/decorations/real/15/DEC-PNK-15.png",
+        "width": 116,
+        "height": 112
+      },
+      {
+        "code": "DEC-PNK-16",
+        "name": "สติกเกอร์และดอกไม้ชมพูหวาน แบบที่ 16",
+        "relativeUrl": "/decorations/real/15/DEC-PNK-16.png",
+        "width": 148,
+        "height": 312
+      },
+      {
+        "code": "DEC-PNK-17",
+        "name": "สติกเกอร์และดอกไม้ชมพูหวาน แบบที่ 17",
+        "relativeUrl": "/decorations/real/15/DEC-PNK-17.png",
+        "width": 176,
+        "height": 200
+      },
+      {
+        "code": "DEC-PNK-18",
+        "name": "สติกเกอร์และดอกไม้ชมพูหวาน แบบที่ 18",
+        "relativeUrl": "/decorations/real/15/DEC-PNK-18.png",
+        "width": 452,
+        "height": 384
+      },
+      {
+        "code": "DEC-PNK-19",
+        "name": "สติกเกอร์และดอกไม้ชมพูหวาน แบบที่ 19",
+        "relativeUrl": "/decorations/real/15/DEC-PNK-19.png",
+        "width": 136,
+        "height": 140
+      },
+      {
+        "code": "DEC-PNK-20",
+        "name": "สติกเกอร์และดอกไม้ชมพูหวาน แบบที่ 20",
+        "relativeUrl": "/decorations/real/15/DEC-PNK-20.png",
+        "width": 188,
+        "height": 168
+      }
+    ]
+  }
+]

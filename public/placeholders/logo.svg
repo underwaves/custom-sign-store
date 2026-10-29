@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+    <rect width="120" height="120" rx="34" fill="#FFF9F5" stroke="#F7B7C8" stroke-width="4"/>
+    <circle cx="60" cy="60" r="44" fill="#FDECEF"/>
+    <path d="M40 48C40 42 45 38 52 38H68C75 38 80 42 80 48V74C80 80 75 84 68 84H52C45 84 40 80 40 74V48Z" fill="#FFFFFF" stroke="#5D473A" stroke-width="3"/>
+    <path d="M48 38C48 31 54 28 60 34C66 28 72 31 72 38" stroke="#E58CA5" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="52" cy="56" r="3" fill="#5D473A"/>
+    <circle cx="68" cy="56" r="3" fill="#5D473A"/>
+    <path d="M55 64Q60 69 65 64" stroke="#E58CA5" stroke-width="3" stroke-linecap="round" fill="none"/>
+    <text x="60" y="106" text-anchor="middle" font-family="Prompt, sans-serif" font-size="11" font-weight="600" fill="#5D473A">SIGN STUDIO</text>
+  </svg>
